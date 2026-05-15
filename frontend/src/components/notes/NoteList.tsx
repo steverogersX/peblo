@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, Plus, SlidersHorizontal, X, Check, Tag, Layers } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Search, Plus, SlidersHorizontal, X, Check, Tag, Layers, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -25,8 +26,25 @@ export function NoteList() {
   const {
     filteredNotes, allTags, allCategories, selectedId,
     search, filterTags, filterCategories, sortBy, loadStatus,
-    createNote, selectNote, setSearch, toggleFilterTag, toggleFilterCategory, setSortBy,
+    hasMore, isFetchingMore,
+    createNote, selectNote, setSearch, toggleFilterTag, toggleFilterCategory, setSortBy, loadMore,
   } = useNotes();
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll — fire loadMore when sentinel enters viewport
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   function handleSelectNote(id: string) {
     selectNote(id);
@@ -56,7 +74,7 @@ export function NoteList() {
         </span>
         <div className="flex items-center gap-0.5">
 
-          {/* Rich filter popover */}
+          {/* Filter popover */}
           <Popover>
             <PopoverTrigger
               title="Filter & sort"
@@ -80,7 +98,6 @@ export function NoteList() {
               sideOffset={8}
               className="w-52 p-0 gap-0 border-border bg-popover shadow-xl"
             >
-              {/* Popover header */}
               <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
                 <span className="text-[12px] font-semibold text-foreground tracking-wide uppercase">
                   Filter & Sort
@@ -99,7 +116,7 @@ export function NoteList() {
                 )}
               </div>
 
-              {/* Sort section */}
+              {/* Sort */}
               <div className="px-3 pt-2.5 pb-2">
                 <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                   <SlidersHorizontal className="size-3" strokeWidth={1.5} />
@@ -124,7 +141,7 @@ export function NoteList() {
                 </div>
               </div>
 
-              {/* Category section */}
+              {/* Category */}
               {allCategories.length > 0 && (
                 <>
                   <Separator className="bg-border" />
@@ -157,7 +174,7 @@ export function NoteList() {
                 </>
               )}
 
-              {/* Tags section */}
+              {/* Tags */}
               {allTags.length > 0 && (
                 <>
                   <Separator className="bg-border" />
@@ -223,7 +240,7 @@ export function NoteList() {
         </div>
       </div>
 
-      {/* Active filter chips (collapsed summary) */}
+      {/* Active filter chips */}
       {(filterTags.length > 0 || filterCategories.length > 0) && (
         <div className="shrink-0 flex flex-wrap gap-1 px-3 pb-2">
           {filterCategories.map((cat) => (
@@ -249,22 +266,31 @@ export function NoteList() {
         </div>
       )}
 
-      {/* Note list */}
-      <ScrollArea className="flex-1 px-1 pt-0.5">
+      {/* Scrollable note list */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
         {loading ? (
-          <div className="space-y-1 p-2">
+          <div className="space-y-px px-1.5 py-1">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-md p-3 space-y-2">
-                <Skeleton className="h-3.5 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-1/2" />
+              <div key={i} className="rounded-md px-3 py-2.5 space-y-1.5">
+                <div className="flex justify-between gap-2">
+                  <Skeleton className="h-3 w-3/5" />
+                  <Skeleton className="h-3 w-6" />
+                </div>
+                <Skeleton className="h-2.5 w-full" />
+                <Skeleton className="h-2.5 w-4/5" />
+                <div className="flex gap-1.5 pt-0.5">
+                  <Skeleton className="h-4 w-12 rounded" />
+                  <Skeleton className="h-4 w-10 rounded" />
+                </div>
               </div>
             ))}
           </div>
         ) : filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-12">
             <p className="text-center text-[13px] text-muted-foreground">
-              {search || filterTags.length > 0 || filterCategories.length > 0 ? "No matches" : "No notes yet"}
+              {search || filterTags.length > 0 || filterCategories.length > 0
+                ? "No matches"
+                : "No notes yet"}
             </p>
             {!search && filterTags.length === 0 && filterCategories.length === 0 && (
               <button
@@ -276,16 +302,36 @@ export function NoteList() {
             )}
           </div>
         ) : (
-          filteredNotes.map((note) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              selected={note.id === selectedId}
-              onClick={() => handleSelectNote(note.id)}
-            />
-          ))
+          <div className="space-y-px px-1.5 py-1">
+            {filteredNotes.map((note) => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                selected={note.id === selectedId}
+                onClick={() => handleSelectNote(note.id)}
+              />
+            ))}
+
+            {/* Sentinel — entering viewport triggers loadMore() */}
+            {hasMore && <div ref={sentinelRef} className="h-1" />}
+
+            {/* Loading more indicator */}
+            {isFetchingMore && (
+              <div className="flex items-center justify-center gap-2 py-3">
+                <Loader2 className="size-3.5 animate-spin text-muted-foreground/50" />
+                <span className="text-[11px] text-muted-foreground/50">Loading more…</span>
+              </div>
+            )}
+
+            {/* End of list hint */}
+            {!hasMore && filteredNotes.length > 0 && (
+              <p className="py-4 text-center text-[10.5px] text-muted-foreground/30">
+                All notes loaded
+              </p>
+            )}
+          </div>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 }

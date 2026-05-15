@@ -36,7 +36,9 @@
       "Bash(dir C:\\\\Users\\\\pavan\\\\peblo\\\\backend *)",
       "Bash(dir \"C:\\\\Users\\\\pavan\\\\peblo\\\\backend\\\\drizzle\")",
       "Bash(grep -i \"empty\\\\|blank\\\\|\\\\\\\\\\\\\\\\n\")",
-      "Bash(pnpm add *)"
+      "Bash(pnpm add *)",
+      "Bash(xargs ls -la)",
+      "Bash(npx tsc *)"
     ]
   }
 }
