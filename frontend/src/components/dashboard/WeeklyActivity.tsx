@@ -1,93 +1,160 @@
 "use client";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis,
+  Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
-import { Activity } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboard } from "@/contexts/DashboardContext";
 
-const SKELETON_HEIGHTS = [72, 48, 96, 56, 80, 40, 64];
+const CREATED_COLOR = "#508eff";
+const EDITED_COLOR  = "#a78bfa";
+
+const SKELETON_H = [56, 88, 44, 72, 104, 36, 60];
+
+function CustomTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-border/60 bg-popover px-3.5 py-2.5 shadow-xl">
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+        {label}
+      </p>
+      {payload.map((item) => (
+        <div key={item.name} className="flex items-center gap-2 text-[13px]">
+          <span
+            className="size-1.5 rounded-full"
+            style={{ background: item.color }}
+          />
+          <span className="text-muted-foreground/70">
+            {item.name === "notesCreated" ? "Created" : "Edited"}
+          </span>
+          <span className="ml-1 font-semibold tabular-nums text-foreground">
+            {item.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function WeeklyActivity() {
   const { insights, status } = useDashboard();
   const loading = status === "loading" || status === "idle";
 
-  const tooltipStyle = {
-    background: "var(--popover)",
-    border: "1px solid var(--border)",
-    borderRadius: "6px",
-    fontSize: "13px",
-    fontFamily: "var(--font-sans)",
-    color: "var(--foreground)",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    padding: "8px 12px",
-  };
+  const totalCreated = insights?.weeklyActivity.reduce((s, d) => s + d.notesCreated, 0) ?? 0;
+  const totalEdited  = insights?.weeklyActivity.reduce((s, d) => s + d.notesEdited,  0) ?? 0;
 
   return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <div className="flex items-center gap-2">
-          <Activity className="size-4 text-muted-foreground" strokeWidth={1.5} />
-          <span className="text-[14px] font-semibold text-foreground">
-            Weekly activity
-          </span>
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-accent/60">
+            <TrendingUp className="size-3.5 text-muted-foreground" strokeWidth={1.5} />
+          </div>
+          <div>
+            <p className="text-[14px] font-semibold text-foreground">Weekly activity</p>
+            <p className="text-[11.5px] text-muted-foreground/45">Last 7 days</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-sm" style={{ background: "var(--chart-bar-created)" }} />
-            Created
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block size-2 rounded-sm" style={{ background: "var(--chart-bar-edited)" }} />
-            Edited
-          </span>
-        </div>
+
+        {/* Summary chips */}
+        {!loading && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-[12px]">
+              <span
+                className="size-2 rounded-sm"
+                style={{ background: CREATED_COLOR }}
+              />
+              <span className="text-muted-foreground/60">Created</span>
+              <span className="font-semibold tabular-nums text-foreground">{totalCreated}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[12px]">
+              <span
+                className="size-2 rounded-sm"
+                style={{ background: EDITED_COLOR }}
+              />
+              <span className="text-muted-foreground/60">Edited</span>
+              <span className="font-semibold tabular-nums text-foreground">{totalEdited}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="px-5 py-5">
+      {/* Subtle divider */}
+      <div className="h-px w-full bg-border/40" />
+
+      {/* Chart */}
+      <div className="px-4 py-5">
         {loading ? (
-          <div className="flex h-44 items-end gap-2.5">
-            {SKELETON_HEIGHTS.map((h, i) => (
-              <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <Skeleton className="w-full rounded-sm" style={{ height: h }} />
-                <Skeleton className="h-3 w-5" />
+          <div className="flex h-48 items-end gap-2">
+            {SKELETON_H.map((h, i) => (
+              <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+                <Skeleton className="w-full rounded" style={{ height: h }} />
+                <Skeleton className="h-2.5 w-5 rounded" />
               </div>
             ))}
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={176}>
+          <ResponsiveContainer width="100%" height={192}>
             <BarChart
               data={insights?.weeklyActivity}
-              margin={{ top: 4, right: 0, left: -28, bottom: 0 }}
-              barCategoryGap="38%"
+              margin={{ top: 4, right: 4, left: -24, bottom: 0 }}
+              barCategoryGap="36%"
               barGap={3}
             >
-              <CartesianGrid strokeDasharray="2 4" stroke="var(--border)" vertical={false} />
+              <defs>
+                <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={CREATED_COLOR} stopOpacity={0.9} />
+                  <stop offset="100%" stopColor={CREATED_COLOR} stopOpacity={0.45} />
+                </linearGradient>
+                <linearGradient id="gradEdited" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={EDITED_COLOR} stopOpacity={0.9} />
+                  <stop offset="100%" stopColor={EDITED_COLOR} stopOpacity={0.45} />
+                </linearGradient>
+              </defs>
+
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}
                 axisLine={false}
                 tickLine={false}
+                tick={{
+                  fontSize: 11.5,
+                  fill: "var(--muted-foreground)",
+                  fontFamily: "var(--font-sans)",
+                }}
               />
               <YAxis
-                tick={{ fontSize: 12, fill: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}
                 axisLine={false}
                 tickLine={false}
                 allowDecimals={false}
+                tick={{
+                  fontSize: 11.5,
+                  fill: "var(--muted-foreground)",
+                  fontFamily: "var(--font-sans)",
+                }}
               />
               <Tooltip
-                cursor={{ fill: "var(--accent)", radius: 3 }}
-                contentStyle={tooltipStyle}
-                labelStyle={{ color: "var(--muted-foreground)", fontSize: "11px", marginBottom: "4px" }}
-                formatter={(value, name) => [
-                  value,
-                  name === "notesCreated" ? "Created" : "Edited",
-                ]}
+                cursor={{ fill: "var(--accent)", radius: 4, opacity: 0.5 }}
+                content={<CustomTooltip />}
               />
-              <Bar dataKey="notesCreated" fill="var(--chart-bar-created)" radius={[3, 3, 0, 0]} maxBarSize={20} />
-              <Bar dataKey="notesEdited" fill="var(--chart-bar-edited)" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              <Bar
+                dataKey="notesCreated"
+                fill="url(#gradCreated)"
+                radius={[4, 4, 2, 2]}
+                maxBarSize={18}
+              />
+              <Bar
+                dataKey="notesEdited"
+                fill="url(#gradEdited)"
+                radius={[4, 4, 2, 2]}
+                maxBarSize={18}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

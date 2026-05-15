@@ -38,7 +38,7 @@ function stripMarkdown(md: string): string {
 
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const { getTagStyle } = useTagColors();
-  const preview = stripMarkdown(note.content).slice(0, 140);
+  const preview = stripMarkdown(note.content).slice(0, 120);
   const hasMeta = note.category || note.tags.length > 0;
 
   return (
@@ -48,42 +48,42 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
       className={cn(
         "group w-full rounded-md px-3 py-2.5 text-left transition-colors duration-100",
         selected
-          ? "bg-accent"
-          : "hover:bg-accent/50"
+          ? "bg-sidebar-accent"
+          : "hover:bg-sidebar-accent/50"
       )}
     >
-      {/* Title row */}
+      {/* Title + timestamp */}
       <div className="flex items-baseline justify-between gap-2">
         <p className={cn(
-          "min-w-0 flex-1 truncate text-[13px] font-medium leading-snug tracking-[-0.01em]",
-          selected ? "text-foreground" : "text-foreground/90"
+          "min-w-0 flex-1 truncate text-[13px] leading-snug tracking-[-0.01em]",
+          selected ? "font-medium text-foreground" : "font-[450] text-foreground/85"
         )}>
           {note.title || "Untitled"}
         </p>
-        <span className="shrink-0 text-[10.5px] tabular-nums text-muted-foreground/40">
+        <span className="shrink-0 text-[10.5px] tabular-nums text-muted-foreground/35">
           {timeAgo(note.updatedAt)}
         </span>
       </div>
 
-      {/* Preview — 2 lines so content is scannable */}
+      {/* Preview */}
       {preview && (
-        <p className="mt-0.5 line-clamp-2 text-[11.5px] leading-[1.5] text-muted-foreground/55">
+        <p className="mt-0.5 line-clamp-2 text-[11.5px] leading-[1.5] text-muted-foreground/50">
           {preview}
         </p>
       )}
 
-      {/* Category + tags — flex-wrap, never overflow */}
+      {/* Category + tags */}
       {hasMeta && (
         <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
           {note.category && (
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/35">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/30">
               {note.category}
             </span>
           )}
           {note.tags.map((t) => (
             <span
               key={t}
-              className="rounded px-1.5 py-[2px] text-[10px] font-medium leading-normal"
+              className="rounded px-1.5 py-px text-[10px] font-medium leading-normal"
               style={getTagStyle(t)}
             >
               {t}

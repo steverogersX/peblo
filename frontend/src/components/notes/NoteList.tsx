@@ -32,14 +32,11 @@ export function NoteList() {
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll — fire loadMore when sentinel enters viewport
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) loadMore();
-      },
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
       { threshold: 0 }
     );
     observer.observe(sentinel);
@@ -60,34 +57,33 @@ export function NoteList() {
   const activeFilterCount = filterTags.length + filterCategories.length + (sortBy !== "updatedAt" ? 1 : 0);
 
   return (
-    <div className="flex h-full w-[240px] shrink-0 flex-col border-r border-border bg-background">
+    <div className="flex h-full w-[240px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
 
-      {/* Header */}
-      <div className="flex shrink-0 items-center justify-between px-4 pt-4 pb-2">
-        <span className="text-[13px] font-semibold text-foreground">
+      {/* ── Header ── */}
+      <div className="flex shrink-0 items-center justify-between px-3.5 pt-4 pb-2.5">
+        <span className="flex items-center gap-1.5 text-[13px] font-semibold text-foreground tracking-[-0.01em]">
           Notes
-          {!loading && (
-            <span className="ml-1.5 text-[12px] font-normal text-muted-foreground">
+          {!loading && filteredNotes.length > 0 && (
+            <span className="rounded-md bg-sidebar-accent px-1.5 py-px text-[10.5px] font-medium text-muted-foreground tabular-nums">
               {filteredNotes.length}
             </span>
           )}
         </span>
         <div className="flex items-center gap-0.5">
-
           {/* Filter popover */}
           <Popover>
             <PopoverTrigger
               title="Filter & sort"
               className={cn(
-                "relative flex size-6 items-center justify-center rounded transition-colors",
+                "relative flex size-6 items-center justify-center rounded-md transition-colors",
                 activeFilterCount > 0
-                  ? "text-[#508eff] hover:bg-accent"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  ? "text-blue hover:bg-sidebar-accent"
+                  : "text-muted-foreground/60 hover:bg-sidebar-accent hover:text-foreground"
               )}
             >
               <SlidersHorizontal className="size-3.5" strokeWidth={1.5} />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-[#508eff] text-[8px] font-bold text-white leading-none">
+                <span className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-blue text-[8px] font-bold text-white leading-none">
                   {activeFilterCount}
                 </span>
               )}
@@ -96,10 +92,10 @@ export function NoteList() {
               side="right"
               align="start"
               sideOffset={8}
-              className="w-52 p-0 gap-0 border-border bg-popover shadow-xl"
+              className="w-52 p-0 gap-0 border-border bg-popover shadow-lg"
             >
               <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-                <span className="text-[12px] font-semibold text-foreground tracking-wide uppercase">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
                   Filter & Sort
                 </span>
                 {activeFilterCount > 0 && (
@@ -109,7 +105,7 @@ export function NoteList() {
                       filterCategories.forEach((c) => toggleFilterCategory(c));
                       setSortBy("updatedAt");
                     }}
-                    className="text-[11px] text-[#508eff] hover:underline"
+                    className="text-[11px] text-blue hover:underline"
                   >
                     Clear all
                   </button>
@@ -118,7 +114,7 @@ export function NoteList() {
 
               {/* Sort */}
               <div className="px-3 pt-2.5 pb-2">
-                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                   <SlidersHorizontal className="size-3" strokeWidth={1.5} />
                   Sort by
                 </div>
@@ -128,9 +124,9 @@ export function NoteList() {
                       key={opt.value}
                       onClick={() => setSortBy(opt.value)}
                       className={cn(
-                        "flex w-full items-center justify-between rounded px-2 py-1 text-[12px] transition-colors",
+                        "flex w-full items-center justify-between rounded-md px-2 py-1 text-[12px] transition-colors",
                         sortBy === opt.value
-                          ? "bg-[#508eff]/10 text-[#508eff] font-medium"
+                          ? "bg-blue/10 text-blue font-medium"
                           : "text-foreground hover:bg-accent"
                       )}
                     >
@@ -146,7 +142,7 @@ export function NoteList() {
                 <>
                   <Separator className="bg-border" />
                   <div className="px-3 pt-2.5 pb-2">
-                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                       <Layers className="size-3" strokeWidth={1.5} />
                       Category
                     </div>
@@ -158,9 +154,9 @@ export function NoteList() {
                             key={cat}
                             onClick={() => toggleFilterCategory(cat)}
                             className={cn(
-                              "flex w-full items-center justify-between rounded px-2 py-1 text-[12px] transition-colors",
+                              "flex w-full items-center justify-between rounded-md px-2 py-1 text-[12px] transition-colors",
                               active
-                                ? "bg-[#508eff]/10 text-[#508eff] font-medium"
+                                ? "bg-blue/10 text-blue font-medium"
                                 : "text-foreground hover:bg-accent"
                             )}
                           >
@@ -179,7 +175,7 @@ export function NoteList() {
                 <>
                   <Separator className="bg-border" />
                   <div className="px-3 pt-2.5 pb-3">
-                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                       <Tag className="size-3" strokeWidth={1.5} />
                       Tags
                     </div>
@@ -192,9 +188,9 @@ export function NoteList() {
                               key={tag}
                               onClick={() => toggleFilterTag(tag)}
                               className={cn(
-                                "flex w-full items-center justify-between rounded px-2 py-1 text-[12px] transition-colors",
+                                "flex w-full items-center justify-between rounded-md px-2 py-1 text-[12px] transition-colors",
                                 active
-                                  ? "bg-[#508eff]/10 text-[#508eff] font-medium"
+                                  ? "bg-blue/10 text-blue font-medium"
                                   : "text-foreground hover:bg-accent"
                               )}
                             >
@@ -214,40 +210,40 @@ export function NoteList() {
           <button
             onClick={handleCreateNote}
             title="New note"
-            className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex size-6 items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-foreground"
           >
             <Plus className="size-4" strokeWidth={1.75} />
           </button>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="shrink-0 px-3 pb-2">
-        <div className="flex items-center gap-2 rounded-md bg-accent px-2.5 py-1.5 transition-colors focus-within:ring-1 focus-within:ring-border-strong">
-          <Search className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+      {/* ── Search ── */}
+      <div className="shrink-0 px-3 pb-2.5">
+        <div className="flex items-center gap-2 rounded-md bg-sidebar-accent px-2.5 py-1.5 ring-0 transition-shadow focus-within:ring-1 focus-within:ring-sidebar-border">
+          <Search className="size-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.5} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search…"
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+            placeholder="Search notes…"
+            className="min-w-0 flex-1 bg-transparent text-[12.5px] text-foreground outline-none placeholder:text-muted-foreground/45"
           />
           {search && (
-            <button onClick={() => setSearch("")} className="shrink-0 text-muted-foreground hover:text-foreground">
+            <button onClick={() => setSearch("")} className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground">
               <X className="size-3" strokeWidth={2} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Active filter chips */}
+      {/* ── Active filter chips ── */}
       {(filterTags.length > 0 || filterCategories.length > 0) && (
         <div className="shrink-0 flex flex-wrap gap-1 px-3 pb-2">
           {filterCategories.map((cat) => (
             <button
               key={cat}
               onClick={() => toggleFilterCategory(cat)}
-              className="flex items-center gap-0.5 rounded-full bg-[#508eff]/10 px-2 py-0.5 text-[11px] font-medium text-[#508eff] transition-colors hover:bg-[#508eff]/20"
+              className="flex items-center gap-0.5 rounded-full bg-blue/10 px-2 py-0.5 text-[11px] font-medium text-blue transition-colors hover:bg-blue/20"
             >
               {cat}
               <X className="size-2.5" strokeWidth={2.5} />
@@ -257,7 +253,7 @@ export function NoteList() {
             <button
               key={tag}
               onClick={() => toggleFilterTag(tag)}
-              className="flex items-center gap-0.5 rounded-full bg-[#508eff]/10 px-2 py-0.5 text-[11px] font-medium text-[#508eff] transition-colors hover:bg-[#508eff]/20"
+              className="flex items-center gap-0.5 rounded-full bg-blue/10 px-2 py-0.5 text-[11px] font-medium text-blue transition-colors hover:bg-blue/20"
             >
               #{tag}
               <X className="size-2.5" strokeWidth={2.5} />
@@ -266,10 +262,10 @@ export function NoteList() {
         </div>
       )}
 
-      {/* Scrollable note list */}
+      {/* ── Note list ── */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {loading ? (
-          <div className="space-y-px px-1.5 py-1">
+          <div className="space-y-px px-2 py-1">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="rounded-md px-3 py-2.5 space-y-1.5">
                 <div className="flex justify-between gap-2">
@@ -287,22 +283,22 @@ export function NoteList() {
           </div>
         ) : filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-12">
-            <p className="text-center text-[13px] text-muted-foreground">
+            <p className="text-center text-[13px] text-muted-foreground/60">
               {search || filterTags.length > 0 || filterCategories.length > 0
-                ? "No matches"
+                ? "No matches found"
                 : "No notes yet"}
             </p>
             {!search && filterTags.length === 0 && filterCategories.length === 0 && (
               <button
                 onClick={handleCreateNote}
-                className="text-[13px] text-[#508eff] hover:underline"
+                className="text-[13px] text-blue hover:underline"
               >
-                Create first note
+                Create your first note
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-px px-1.5 py-1">
+          <div className="space-y-px px-2 py-1">
             {filteredNotes.map((note) => (
               <NoteCard
                 key={note.id}
@@ -312,18 +308,15 @@ export function NoteList() {
               />
             ))}
 
-            {/* Sentinel — entering viewport triggers loadMore() */}
             {hasMore && <div ref={sentinelRef} className="h-1" />}
 
-            {/* Loading more indicator */}
             {isFetchingMore && (
               <div className="flex items-center justify-center gap-2 py-3">
-                <Loader2 className="size-3.5 animate-spin text-muted-foreground/50" />
-                <span className="text-[11px] text-muted-foreground/50">Loading more…</span>
+                <Loader2 className="size-3.5 animate-spin text-muted-foreground/40" />
+                <span className="text-[11px] text-muted-foreground/40">Loading more…</span>
               </div>
             )}
 
-            {/* End of list hint */}
             {!hasMore && filteredNotes.length > 0 && (
               <p className="py-4 text-center text-[10.5px] text-muted-foreground/30">
                 All notes loaded

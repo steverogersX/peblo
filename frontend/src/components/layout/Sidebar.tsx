@@ -10,7 +10,7 @@ import {
   Archive,
   Settings2,
   PenLine,
-  ChevronLeft,
+  ChevronRight,
   Plus,
   LogOut,
   ChevronsUpDown,
@@ -32,8 +32,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_ITEMS = [
@@ -43,7 +41,7 @@ const NAV_ITEMS = [
   { href: "/archive", label: "Archive", icon: Archive },
 ] as const;
 
-function NavLink({
+function NavItem({
   href,
   label,
   icon: Icon,
@@ -56,45 +54,30 @@ function NavLink({
   active: boolean;
   collapsed: boolean;
 }) {
+  const itemCls = cn(
+    "flex items-center rounded-md text-[13px] transition-colors duration-100 select-none",
+    active
+      ? "bg-sidebar-accent text-foreground font-medium"
+      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground/90"
+  );
+
   if (collapsed) {
     return (
       <Tooltip>
         <TooltipTrigger
           render={
-            <Link
-              href={href}
-              className={cn(
-                "mb-px flex size-8 items-center justify-center rounded-md transition-colors",
-                active
-                  ? "bg-sidebar-accent text-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-              )}
-            />
+            <Link href={href} className={cn(itemCls, "mb-px size-8 justify-center")} />
           }
         >
           <Icon className="size-[17px]" strokeWidth={1.5} />
         </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
-          {label}
-        </TooltipContent>
+        <TooltipContent side="right" sideOffset={8}>{label}</TooltipContent>
       </Tooltip>
     );
   }
 
   return (
-    <Link
-      href={href}
-      className={cn(
-        "relative flex items-center gap-2 rounded-md px-2 py-[5px] mb-px",
-        "text-[13px] font-medium transition-colors duration-100",
-        active
-          ? "bg-sidebar-accent text-foreground"
-          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-      )}
-    >
-      {active && (
-        <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-blue" />
-      )}
+    <Link href={href} className={cn(itemCls, "mb-px gap-2.5 px-2 py-[5px]")}>
       <Icon className="size-[17px] shrink-0" strokeWidth={1.5} />
       {label}
     </Link>
@@ -146,43 +129,53 @@ export function Sidebar() {
           collapsed ? "w-[52px]" : "w-[220px]"
         )}
       >
-        {/* Workspace header */}
+        {/* ── Workspace header ── */}
         <div
           className={cn(
-            "flex h-[48px] shrink-0 items-center",
-            collapsed ? "justify-center px-1.5" : "justify-between px-3"
+            "flex h-[52px] shrink-0 items-center",
+            collapsed ? "justify-center px-1.5" : "justify-between px-2.5"
           )}
         >
-          <Link
-            href="/dashboard"
-            className={cn(
-              "flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-sidebar-accent",
-              collapsed && "size-8 justify-center p-0"
-            )}
-          >
-            <div className="flex size-5 shrink-0 items-center justify-center rounded bg-foreground">
-              <PenLine className="size-3 text-background" strokeWidth={2} />
-            </div>
-            {!collapsed && (
-              <span className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
-                Peblo
-              </span>
-            )}
-          </Link>
-
-          {!collapsed && (
-            <button
-              onClick={toggle}
-              aria-label="Collapse sidebar"
-              className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-            >
-              <ChevronLeft className="size-3.5" />
-            </button>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    onClick={toggle}
+                    aria-label="Expand sidebar"
+                    className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-sidebar-accent"
+                  />
+                }
+              >
+                <div className="flex size-5 shrink-0 items-center justify-center rounded-[5px] bg-foreground shadow-sm">
+                  <PenLine className="size-3 text-background" strokeWidth={2} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>Expand</TooltipContent>
+            </Tooltip>
+          ) : (
+            <>
+              <div className="flex min-w-0 items-center gap-2.5 px-1">
+                <div className="flex size-5 shrink-0 items-center justify-center rounded-[5px] bg-foreground shadow-sm">
+                  <PenLine className="size-3 text-background" strokeWidth={2} />
+                </div>
+                <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-foreground">
+                  Peblo
+                </span>
+              </div>
+              <button
+                onClick={toggle}
+                aria-label="Collapse sidebar"
+                className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-foreground"
+              >
+                <ChevronRight className="size-3.5 rotate-180" />
+              </button>
+            </>
           )}
         </div>
 
-        {/* New Note CTA */}
-        <div className={cn("px-2 pb-2", collapsed && "flex justify-center px-1.5")}>
+        {/* ── New note ── */}
+        <div className={cn("px-2 pb-1.5", collapsed && "flex justify-center px-1.5")}>
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
@@ -193,31 +186,36 @@ export function Sidebar() {
                   />
                 }
               >
-                <Plus className="size-4" />
+                <Plus className="size-4" strokeWidth={1.75} />
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                New note
-              </TooltipContent>
+              <TooltipContent side="right" sideOffset={8}>New note</TooltipContent>
             </Tooltip>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => router.push("/notes")}
-              className="w-full justify-start gap-2 border-sidebar-border bg-transparent text-[13px] font-medium text-muted-foreground shadow-none hover:bg-sidebar-accent hover:text-foreground"
+              className={cn(
+                "flex w-full items-center gap-2.5 rounded-md px-2 py-[5px]",
+                "text-[13px] text-muted-foreground transition-colors duration-100",
+                "hover:bg-sidebar-accent/60 hover:text-foreground/90"
+              )}
             >
-              <Plus className="size-3.5" />
+              <Plus className="size-[17px] shrink-0" strokeWidth={1.75} />
               New note
-            </Button>
+            </button>
           )}
         </div>
 
-        {/* Nav */}
+        {/* ── Nav ── */}
         <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-2 py-1">
+          {!collapsed && (
+            <p className="mb-1 px-2 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/40 select-none">
+              Workspace
+            </p>
+          )}
           {NAV_ITEMS.map(({ href, label, icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
-              <NavLink
+              <NavItem
                 key={href}
                 href={href}
                 label={label}
@@ -229,10 +227,13 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Settings + User footer */}
-        <div className={cn("shrink-0 px-2 pb-2", collapsed && "flex flex-col items-center px-1.5")}>
-          <Separator className="mb-2 bg-sidebar-border" />
-
+        {/* ── Footer: settings + user ── */}
+        <div
+          className={cn(
+            "shrink-0 border-t border-sidebar-border px-2 py-2",
+            collapsed && "flex flex-col items-center px-1.5"
+          )}
+        >
           {/* Settings */}
           {collapsed ? (
             <Tooltip>
@@ -251,24 +252,19 @@ export function Sidebar() {
               >
                 <Settings2 className="size-[17px]" strokeWidth={1.5} />
               </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                Settings
-              </TooltipContent>
+              <TooltipContent side="right" sideOffset={8}>Settings</TooltipContent>
             </Tooltip>
           ) : (
             <Link
               href="/settings"
               className={cn(
-                "relative flex items-center gap-2 rounded-md px-2 py-[5px] mb-1",
-                "text-[13px] font-medium transition-colors duration-100",
+                "mb-1 flex items-center gap-2.5 rounded-md px-2 py-[5px]",
+                "text-[13px] transition-colors duration-100",
                 settingsActive
-                  ? "bg-sidebar-accent text-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  ? "bg-sidebar-accent text-foreground font-medium"
+                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground/90"
               )}
             >
-              {settingsActive && (
-                <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-blue" />
-              )}
               <Settings2 className="size-[17px] shrink-0" strokeWidth={1.5} />
               Settings
             </Link>
@@ -299,30 +295,30 @@ export function Sidebar() {
             </Tooltip>
           ) : (
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-sidebar-accent group outline-none">
-                <Avatar size="sm" className="shrink-0 border border-border-strong">
+              <DropdownMenuTrigger className="group flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 outline-none transition-colors hover:bg-sidebar-accent">
+                <Avatar size="sm" className="shrink-0">
                   <AvatarFallback className="bg-accent text-[10px] font-semibold text-subtle">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1 text-left">
                   <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
-                  <p className="text-[11px] text-muted-foreground">Free plan</p>
+                  <p className="text-[11px] text-muted-foreground/60">Free plan</p>
                 </div>
-                <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-52 mb-1">
+              <DropdownMenuContent side="top" align="start" className="mb-1 w-52">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel className="font-normal">
-                    <p className="text-[13px] font-medium text-foreground truncate">{displayName}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{email}</p>
+                    <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{email}</p>
                   </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="text-[13px] text-destructive focus:text-destructive gap-2 cursor-pointer"
+                    className="cursor-pointer gap-2 text-[13px] text-destructive focus:text-destructive"
                   >
                     <LogOut className="size-3.5" />
                     Log out
