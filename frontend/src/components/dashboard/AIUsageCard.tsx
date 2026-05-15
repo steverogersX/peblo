@@ -1,11 +1,11 @@
 "use client";
 
-import { BrainCircuit, TrendingUp } from "lucide-react";
+import { BrainCircuit, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboard } from "@/contexts/DashboardContext";
 
 function UsageBar({ label, value, max }: { label: string; value: number; max: number }) {
-  const pct = Math.min(Math.round((value / max) * 100), 100);
+  const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 0;
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-[13px]">
@@ -27,6 +27,7 @@ function UsageBar({ label, value, max }: { label: string; value: number; max: nu
 export function AIUsageCard() {
   const { insights, status } = useDashboard();
   const loading = status === "loading" || status === "idle";
+  const total = insights?.aiUsage.totalRequests ?? 0;
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -49,12 +50,15 @@ export function AIUsageCard() {
           <>
             <div>
               <p className="text-[32px] font-bold tracking-[-0.04em] text-foreground tabular-nums leading-none">
-                {insights?.aiUsage.totalRequests}
+                {total}
               </p>
               <div className="mt-2 flex items-center gap-1.5 text-[13px] text-muted-foreground">
-                <TrendingUp className="size-3.5 text-blue" strokeWidth={1.5} />
+                <Sparkles className="size-3.5 text-blue" strokeWidth={1.5} />
                 <span>
-                  <span className="font-medium text-foreground">{insights?.aiUsage.thisWeek}</span> summaries this week
+                  {total === 0
+                    ? "No AI summaries generated yet"
+                    : <><span className="font-medium text-foreground">{insights?.aiUsage.thisWeek}</span> summaries this week</>
+                  }
                 </span>
               </div>
             </div>

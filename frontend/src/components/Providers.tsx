@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { TagColorProvider } from "@/contexts/TagColorContext";
+import { NotesProvider } from "@/contexts/NotesContext";
 import type { ReactNode } from "react";
 
 function ThemeApplier() {
@@ -26,7 +27,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <SettingsProvider>
       <TagColorProvider>
-        <InnerProviders>{children}</InnerProviders>
+        <NotesProvider>
+          <InnerProviders>{children}</InnerProviders>
+        </NotesProvider>
       </TagColorProvider>
     </SettingsProvider>
   );
