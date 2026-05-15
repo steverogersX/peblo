@@ -197,6 +197,7 @@ export function RichEditor({ content, onChange, placeholder, className }: RichEd
     onUpdate({ editor }) {
       // @ts-expect-error tiptap-markdown storage
       const md: string = editor.storage.markdown.getMarkdown();
+      contentRef.current = md; // prevent the sync effect from calling setContent after debounced save
       onChangeRef.current(md);
     },
   });
