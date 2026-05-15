@@ -1,0 +1,317 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --color-dim: var(--dim);
+  --color-subtle: var(--subtle);
+  --color-border-strong: var(--border-strong);
+  --color-blue: var(--blue);
+  --color-blue-light: var(--blue-light);
+  --color-card-hover: var(--card-hover);
+
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
+  --radius-4xl: 9999px;
+}
+
+/* ── Light mode ─────────────────────────────────────────────────────── */
+:root {
+  /* Core surfaces */
+  --background: #ffffff;
+  --foreground: #37352f;
+  --card: #ffffff;
+  --card-foreground: #37352f;
+  --popover: #ffffff;
+  --popover-foreground: #37352f;
+
+  /* Primary */
+  --primary: #37352f;
+  --primary-foreground: #ffffff;
+
+  /* Muted surfaces */
+  --secondary: #f7f6f3;
+  --secondary-foreground: #37352f;
+  --muted: #f7f6f3;
+  --muted-foreground: #787672;
+  --accent: #efefee;
+  --accent-foreground: #37352f;
+
+  /* State */
+  --destructive: #d44c47;
+  --border: #e9e8e7;
+  --input: #f7f6f3;
+  --ring: #2383e2;
+
+  /* Charts — muted, cohesive */
+  --chart-1: #a8c5b0;
+  --chart-2: #2383e2;
+  --chart-3: #94a3b8;
+  --chart-4: #c8c4c1;
+  --chart-5: #a0b8d8;
+
+  /* Dedicated chart bar colors (softer than brand blue) */
+  --chart-bar-created: #a8c5b0;
+  --chart-bar-edited: #9ab8d8;
+
+  --radius: 0.375rem;
+
+  /* Sidebar */
+  --sidebar: #f7f6f3;
+  --sidebar-foreground: #37352f;
+  --sidebar-primary: #2383e2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #efefee;
+  --sidebar-accent-foreground: #37352f;
+  --sidebar-border: #e9e8e7;
+  --sidebar-ring: #2383e2;
+
+  /* Extended tokens */
+  --dim: #9b9a97;
+  --subtle: #5a5a57;
+  --border-strong: #d4d2cf;
+  --blue: #2383e2;
+  --blue-light: #4a8fd1;
+  --card-hover: #f7f6f3;
+
+  /* ── Notion-style tag semantic colors (8 hues) ── */
+  --tag-0-bg: #f1f1ef; --tag-0-text: #787672;
+  --tag-1-bg: #f4eeee; --tag-1-text: #9f6b53;
+  --tag-2-bg: #fdeece; --tag-2-text: #c07e33;
+  --tag-3-bg: #fbf3db; --tag-3-text: #a07430;
+  --tag-4-bg: #edf3ec; --tag-4-text: #5b8c6b;
+  --tag-5-bg: #e7f0fa; --tag-5-text: #3e72b0;
+  --tag-6-bg: #ede9fc; --tag-6-text: #7d5fa0;
+  --tag-7-bg: #f7e6ef; --tag-7-text: #c0547a;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────── */
+.dark {
+  /* Core surfaces */
+  --background: #191919;
+  --foreground: #e3e3e3;
+  --card: #202020;
+  --card-foreground: #e3e3e3;
+  --popover: #252525;
+  --popover-foreground: #e3e3e3;
+
+  /* Primary */
+  --primary: #e3e3e3;
+  --primary-foreground: #191919;
+
+  /* Muted surfaces */
+  --secondary: #252525;
+  --secondary-foreground: #e3e3e3;
+  --muted: #252525;
+  --muted-foreground: #7f7f7d;
+  --accent: #2d2d2d;
+  --accent-foreground: #e3e3e3;
+
+  /* State */
+  --destructive: #f87171;
+  --border: #2f2f2f;
+  --input: #252525;
+  --ring: #4a9fd5;
+
+  /* Charts — muted for dark */
+  --chart-1: #3d6e52;
+  --chart-2: #4a9fd5;
+  --chart-3: #5a6e80;
+  --chart-4: #3a3a3a;
+  --chart-5: #4a70a0;
+
+  /* Dedicated chart bar colors */
+  --chart-bar-created: #3d6e52;
+  --chart-bar-edited: #3a6aab;
+
+  --radius: 0.375rem;
+
+  /* Sidebar */
+  --sidebar: #1e1e1e;
+  --sidebar-foreground: #e3e3e3;
+  --sidebar-primary: #4a9fd5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2d2d2d;
+  --sidebar-accent-foreground: #e3e3e3;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #4a9fd5;
+
+  /* Extended tokens */
+  --dim: #535350;
+  --subtle: #b8b8b5;
+  --border-strong: #3d3d3d;
+  --blue: #4a9fd5;
+  --blue-light: #6ab4e0;
+  --card-hover: #282828;
+
+  /* ── Notion-style tag semantic colors (dark) ── */
+  --tag-0-bg: #3c3c3a; --tag-0-text: #9c9c9a;
+  --tag-1-bg: #4a3828; --tag-1-text: #c8a070;
+  --tag-2-bg: #5c4020; --tag-2-text: #d0a050;
+  --tag-3-bg: #4a3d1e; --tag-3-text: #d0a040;
+  --tag-4-bg: #2a3f30; --tag-4-text: #70b080;
+  --tag-5-bg: #1f3a5f; --tag-5-text: #7ab0e8;
+  --tag-6-bg: #3a2d5a; --tag-6-text: #a888d0;
+  --tag-7-bg: #4a2838; --tag-7-text: #d080a0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  *::-webkit-scrollbar { width: 4px; height: 4px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  html { @apply font-sans antialiased; }
+}
+
+/* ── Smooth base transitions ──────────────────────────────────────────── */
+@layer base {
+  button, a, [role="button"], input, select, textarea {
+    transition-property: background-color, border-color, color, opacity, box-shadow;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
+  }
+}
+
+/* ── Tiptap editor content ──────────────────────────────────────────── */
+.tiptap { outline: none; min-height: 420px; }
+.tiptap > * + * { margin-top: 0.6em; }
+
+.tiptap p {
+  color: var(--foreground);
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: -0.003em;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--dim);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.tiptap h1 {
+  font-size: 1.875rem; font-weight: 700;
+  letter-spacing: -0.035em; line-height: 1.15;
+  color: var(--foreground); margin-top: 1.75em;
+}
+.tiptap h2 {
+  font-size: 1.375rem; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.25;
+  color: var(--foreground); margin-top: 1.4em;
+}
+.tiptap h3 {
+  font-size: 1.125rem; font-weight: 600;
+  letter-spacing: -0.015em; line-height: 1.35;
+  color: var(--foreground); margin-top: 1.15em;
+}
+
+.tiptap ul  { list-style: disc;    padding-left: 1.5em; }
+.tiptap ol  { list-style: decimal; padding-left: 1.5em; }
+.tiptap li  { font-size: 16px; line-height: 1.8; color: var(--foreground); }
+.tiptap li + li { margin-top: 0.1em; }
+.tiptap li p { margin: 0; }
+
+.tiptap ul[data-type="taskList"]  { list-style: none; padding-left: 0; }
+.tiptap ul[data-type="taskList"] li {
+  display: flex; align-items: flex-start; gap: 0.5em;
+}
+.tiptap ul[data-type="taskList"] li > label { margin-top: 4px; flex-shrink: 0; }
+.tiptap ul[data-type="taskList"] li > div   { flex: 1; }
+.tiptap input[type="checkbox"] {
+  accent-color: var(--blue);
+  width: 14px; height: 14px; cursor: pointer;
+  border-radius: 3px;
+}
+
+.tiptap code {
+  background: var(--muted);
+  border-radius: 3px;
+  font-family: var(--font-mono); font-size: 13.5px;
+  color: var(--blue-light);
+  padding: 0.1em 0.4em;
+}
+
+.tiptap pre {
+  background: var(--muted);
+  border-radius: 6px;
+  padding: 1.1em 1.4em; overflow-x: auto;
+}
+.tiptap pre code {
+  background: none;
+  padding: 0;
+  color: var(--foreground); font-size: 13.5px; line-height: 1.75;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid var(--border-strong);
+  margin-left: 0; padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: normal;
+}
+
+.tiptap hr { border: none; border-top: 1px solid var(--border); margin: 1.75em 0; }
+
+.tiptap a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.tiptap a:hover { color: var(--blue-light); }
+
+.tiptap mark {
+  background: color-mix(in srgb, var(--blue) 14%, transparent);
+  color: inherit;
+  border-radius: 2px; padding: 0.05em 0.25em;
+}
+
+.tiptap ::selection { background: color-mix(in srgb, var(--blue) 16%, transparent); }
+.tiptap strong { font-weight: 600; }
+.tiptap em { font-style: italic; }

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\(!!l.Spellcheck, !!l.LayoutList, !!l.AlignLeft, !!l.Eye, !!l.Globe, !!l.Lock\\)\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\\\\frontend\\\\src\" -Recurse | Where-Object { $_.Extension -eq \".tsx\" } | ForEach-Object { $_.FullName })"
+    ]
+  }
+}
