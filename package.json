@@ -1,15 +1,10 @@
 {
   "name": "peblo",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend",
-    "shared"
-  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
-    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=frontend",
-    "lint": "npm run lint --workspace=frontend && npm run lint --workspace=backend"
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter @peblo/shared build && pnpm --filter @peblo/backend build && pnpm --filter frontend build",
+    "lint": "pnpm --filter frontend lint && pnpm --filter @peblo/backend lint"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

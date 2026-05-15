@@ -6,7 +6,7 @@ import { CreateNoteSchema, UpdateNoteSchema } from "../lib/schemas";
 
 const router = Router();
 
-router.get("/", async (_req, res, next) => {
+router.get("/", async (_: Request, res: Response, next: NextFunction) => {
   try {
     const data = await notesService.getAllNotes();
     res.status(httpStatus.OK).json({ data });

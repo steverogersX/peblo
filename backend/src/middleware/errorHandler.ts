@@ -18,6 +18,7 @@ export function errorHandler(
     return;
   }
 
+  console.error("[errorHandler] Unhandled error:", err);
   const apiErr: ApiError = {
     name: "INTERNAL_ERROR",
     code: httpStatus.INTERNAL_SERVER_ERROR,

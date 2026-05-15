@@ -8,7 +8,10 @@
       "Bash(Format-Table -AutoSize)",
       "Bash(npm install *)",
       "Bash(Get-ChildItem *)",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\\\\backend\\\\src\\\\\" -Recurse -File -Depth 3 | Where-Object { $_.Extension -in @\\('.ts', '.tsx'\\) } | Select-Object FullName)"
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\\\\backend\\\\src\\\\\" -Recurse -File -Depth 3 | Where-Object { $_.Extension -in @\\('.ts', '.tsx'\\) } | Select-Object FullName)",
+      "PowerShell(npm install *)",
+      "Bash(curl *)",
+      "Bash(node *)"
     ]
   }
 }

@@ -236,7 +236,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
                 <Select
                   value={selectedNote.category ?? "none"}
                   onValueChange={(val) =>
-                    updateNote(selectedNote.id, { category: val === "none" ? undefined : val || undefined })
+                    updateNote(selectedNote.id, { category: val === "none" ? null : val || undefined })
                   }
                 >
                   <SelectTrigger className="h-auto w-auto min-w-[100px] rounded border-0 bg-transparent px-2 py-1 text-[13px] text-foreground shadow-none transition-colors hover:bg-accent focus-visible:ring-0 focus-visible:ring-offset-0 data-[placeholder]:text-muted-foreground">

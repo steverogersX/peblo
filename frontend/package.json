@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@peblo/shared": "workspace:*",
     "@base-ui/react": "^1.4.1",
+    "zod": "^3.24.1",
     "@tiptap/extension-bubble-menu": "^3.23.4",
     "@tiptap/extension-character-count": "^3.23.4",
     "@tiptap/extension-highlight": "^3.23.4",
