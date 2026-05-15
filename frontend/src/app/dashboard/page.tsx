@@ -5,6 +5,7 @@ import { RecentNotes } from "@/components/dashboard/RecentNotes";
 import { TopTags } from "@/components/dashboard/TopTags";
 import { WeeklyActivity } from "@/components/dashboard/WeeklyActivity";
 import { AIUsageCard } from "@/components/dashboard/AIUsageCard";
+import { useAuth } from "@/contexts/AuthContext";
 
 function greeting() {
   const h = new Date().getHours();
@@ -14,29 +15,43 @@ function greeting() {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const firstName = user?.name?.split(" ")[0] ?? "there";
+
   return (
-    <div className="flex flex-col gap-8 px-10 py-10">
-      <div>
-        <h2 className="text-[24px] font-bold tracking-[-0.025em] text-foreground">
-          {greeting()}, John
-        </h2>
-        <p className="mt-1.5 text-[14px] text-muted-foreground">
-          Here&apos;s what&apos;s happening in your workspace today.
-        </p>
+    <div className="flex flex-col gap-6 px-8 py-8 xl:px-10">
+
+      {/* ── Greeting ── */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-[22px] font-bold tracking-[-0.03em] text-foreground">
+            {greeting()}, {firstName}
+          </h1>
+          <p className="mt-0.5 text-[13.5px] text-muted-foreground/55">
+            Here&apos;s your workspace at a glance.
+          </p>
+        </div>
       </div>
 
+      {/* ── Stat cards ── */}
       <DashboardStats />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <div className="flex flex-col gap-6">
-          <WeeklyActivity />
-          <RecentNotes />
-        </div>
+      {/* ── Weekly chart (full width) ── */}
+      <WeeklyActivity />
+
+      {/* ── Bottom two-col grid ── */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+
+        {/* Left: recently edited */}
+        <RecentNotes />
+
+        {/* Right: AI usage + top tags */}
         <div className="flex flex-col gap-6">
           <AIUsageCard />
           <TopTags />
         </div>
       </div>
+
     </div>
   );
 }

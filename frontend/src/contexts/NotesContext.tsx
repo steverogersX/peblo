@@ -12,7 +12,6 @@ import {
 import type { Note, UpdateNote } from "@/lib/schemas/note";
 import { notesApi } from "@/lib/api/notes";
 
-
 export type SaveStatus = "saved" | "saving" | "unsaved";
 export type SortBy = "updatedAt" | "createdAt" | "title";
 
@@ -25,15 +24,21 @@ interface NotesState {
   sortBy: SortBy;
   loadStatus: "idle" | "loading" | "success" | "error";
   saveStatus: SaveStatus;
+  cursor: string | null;
+  hasMore: boolean;
+  isFetchingMore: boolean;
 }
 
 type NotesAction =
   | { type: "LOAD_START" }
-  | { type: "LOAD_SUCCESS"; payload: Note[] }
+  | { type: "LOAD_SUCCESS"; payload: { notes: Note[]; nextCursor: string | null; hasMore: boolean } }
   | { type: "LOAD_ERROR" }
+  | { type: "LOAD_MORE_START" }
+  | { type: "LOAD_MORE_SUCCESS"; payload: { notes: Note[]; nextCursor: string | null; hasMore: boolean } }
   | { type: "SELECT"; payload: string | null }
   | { type: "CREATE"; payload: Note }
   | { type: "UPDATE"; payload: { id: string; changes: UpdateNote } }
+  | { type: "PATCH"; payload: { id: string; patch: Partial<Note> } }
   | { type: "DELETE"; payload: string }
   | { type: "TOGGLE_ARCHIVE"; payload: string }
   | { type: "SET_SEARCH"; payload: string }
@@ -41,7 +46,6 @@ type NotesAction =
   | { type: "TOGGLE_FILTER_CATEGORY"; payload: string }
   | { type: "SET_SORT"; payload: SortBy }
   | { type: "SET_SAVE_STATUS"; payload: SaveStatus };
-
 
 const initialState: NotesState = {
   notes: [],
@@ -52,6 +56,9 @@ const initialState: NotesState = {
   sortBy: "updatedAt",
   loadStatus: "loading",
   saveStatus: "saved",
+  cursor: null,
+  hasMore: false,
+  isFetchingMore: false,
 };
 
 function notesReducer(state: NotesState, action: NotesAction): NotesState {
@@ -60,10 +67,29 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
       return { ...state, loadStatus: "loading" };
 
     case "LOAD_SUCCESS":
-      return { ...state, loadStatus: "success", notes: action.payload };
+      return {
+        ...state,
+        loadStatus: "success",
+        notes: action.payload.notes,
+        cursor: action.payload.nextCursor,
+        hasMore: action.payload.hasMore,
+        isFetchingMore: false,
+      };
 
     case "LOAD_ERROR":
       return { ...state, loadStatus: "error" };
+
+    case "LOAD_MORE_START":
+      return { ...state, isFetchingMore: true };
+
+    case "LOAD_MORE_SUCCESS":
+      return {
+        ...state,
+        isFetchingMore: false,
+        notes: [...state.notes, ...action.payload.notes],
+        cursor: action.payload.nextCursor,
+        hasMore: action.payload.hasMore,
+      };
 
     case "SELECT":
       return { ...state, selectedId: action.payload };
@@ -88,12 +114,19 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
       };
     }
 
+    case "PATCH":
+      return {
+        ...state,
+        notes: state.notes.map((n) =>
+          n.id === action.payload.id ? { ...n, ...action.payload.patch } : n
+        ),
+      };
+
     case "DELETE":
       return {
         ...state,
         notes: state.notes.filter((n) => n.id !== action.payload),
-        selectedId:
-          state.selectedId === action.payload ? null : state.selectedId,
+        selectedId: state.selectedId === action.payload ? null : state.selectedId,
       };
 
     case "TOGGLE_ARCHIVE":
@@ -102,8 +135,7 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
         notes: state.notes.map((n) =>
           n.id === action.payload ? { ...n, isArchived: !n.isArchived } : n
         ),
-        selectedId:
-          state.selectedId === action.payload ? null : state.selectedId,
+        selectedId: state.selectedId === action.payload ? null : state.selectedId,
       };
 
     case "SET_SEARCH":
@@ -136,13 +168,12 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
   }
 }
 
-
 function selectFilteredNotes(state: NotesState): Note[] {
-  let notes = state.notes.filter((n) => !n.isArchived);
+  let list = state.notes.filter((n) => !n.isArchived);
 
   if (state.search.trim()) {
     const q = state.search.toLowerCase();
-    notes = notes.filter(
+    list = list.filter(
       (n) =>
         n.title.toLowerCase().includes(q) ||
         n.content.toLowerCase().includes(q) ||
@@ -151,22 +182,18 @@ function selectFilteredNotes(state: NotesState): Note[] {
   }
 
   if (state.filterTags.length > 0) {
-    notes = notes.filter((n) =>
-      state.filterTags.every((t) => n.tags.includes(t))
-    );
+    list = list.filter((n) => state.filterTags.every((t) => n.tags.includes(t)));
   }
 
   if (state.filterCategories.length > 0) {
-    notes = notes.filter((n) =>
-      n.category != null && state.filterCategories.includes(n.category)
+    list = list.filter(
+      (n) => n.category != null && state.filterCategories.includes(n.category)
     );
   }
 
-  return [...notes].sort((a, b) => {
+  return [...list].sort((a, b) => {
     if (state.sortBy === "title") return a.title.localeCompare(b.title);
-    return (
-      new Date(b[state.sortBy]).getTime() - new Date(a[state.sortBy]).getTime()
-    );
+    return new Date(b[state.sortBy]).getTime() - new Date(a[state.sortBy]).getTime();
   });
 }
 
@@ -175,9 +202,10 @@ function selectAllTags(notes: Note[]): string[] {
 }
 
 function selectAllCategories(notes: Note[]): string[] {
-  return [...new Set(notes.map((n) => n.category).filter((c): c is string => c != null))].sort();
+  return [
+    ...new Set(notes.map((n) => n.category).filter((c): c is string => c != null)),
+  ].sort();
 }
-
 
 interface NotesContextValue extends NotesState {
   filteredNotes: Note[];
@@ -186,6 +214,7 @@ interface NotesContextValue extends NotesState {
   selectedNote: Note | null;
   createNote: () => string;
   updateNote: (id: string, changes: UpdateNote) => void;
+  patchNote: (id: string, patch: Partial<Note>) => void;
   deleteNote: (id: string) => void;
   toggleArchive: (id: string) => void;
   selectNote: (id: string | null) => void;
@@ -194,10 +223,10 @@ interface NotesContextValue extends NotesState {
   toggleFilterCategory: (category: string) => void;
   setSortBy: (sort: SortBy) => void;
   setSaveStatus: (s: SaveStatus) => void;
+  loadMore: () => void;
 }
 
 const NotesContext = createContext<NotesContextValue | null>(null);
-
 
 export function NotesProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(notesReducer, initialState);
@@ -207,10 +236,23 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     notesApi
       .list()
-      .then((notes) => dispatch({ type: "LOAD_SUCCESS", payload: notes }))
+      .then((result) => dispatch({ type: "LOAD_SUCCESS", payload: result }))
       .catch((err) => {
         console.error("Failed to load notes:", err);
         dispatch({ type: "LOAD_ERROR" });
+      });
+  }, []);
+
+  const loadMore = useCallback(() => {
+    const { cursor, hasMore, isFetchingMore } = stateRef.current;
+    if (!hasMore || isFetchingMore || !cursor) return;
+    dispatch({ type: "LOAD_MORE_START" });
+    notesApi
+      .list({ cursor })
+      .then((result) => dispatch({ type: "LOAD_MORE_SUCCESS", payload: result }))
+      .catch((err) => {
+        console.error("Failed to load more notes:", err);
+        dispatch({ type: "LOAD_MORE_START" }); // reset isFetchingMore
       });
   }, []);
 
@@ -228,29 +270,23 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     };
     dispatch({ type: "CREATE", payload: note });
     notesApi
-      .create({
-        id: note.id,
-        title: note.title,
-        content: note.content,
-        tags: note.tags,
-        visibility: note.visibility,
-      })
+      .create({ id: note.id, title: note.title, content: note.content, tags: note.tags, visibility: note.visibility })
       .catch((err) => console.error("Failed to create note:", err));
     return note.id;
   }, []);
 
   const updateNote = useCallback((id: string, changes: UpdateNote) => {
     dispatch({ type: "UPDATE", payload: { id, changes } });
-    notesApi
-      .update(id, changes)
-      .catch((err) => console.error("Failed to update note:", err));
+    notesApi.update(id, changes).catch((err) => console.error("Failed to update note:", err));
+  }, []);
+
+  const patchNote = useCallback((id: string, patch: Partial<Note>) => {
+    dispatch({ type: "PATCH", payload: { id, patch } });
   }, []);
 
   const deleteNote = useCallback((id: string) => {
     dispatch({ type: "DELETE", payload: id });
-    notesApi
-      .remove(id)
-      .catch((err) => console.error("Failed to delete note:", err));
+    notesApi.remove(id).catch((err) => console.error("Failed to delete note:", err));
   }, []);
 
   const toggleArchive = useCallback((id: string) => {
@@ -290,8 +326,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const filteredNotes = selectFilteredNotes(state);
   const allTags = selectAllTags(state.notes);
   const allCategories = selectAllCategories(state.notes);
-  const selectedNote =
-    state.notes.find((n) => n.id === state.selectedId) ?? null;
+  const selectedNote = state.notes.find((n) => n.id === state.selectedId) ?? null;
 
   return (
     <NotesContext.Provider
@@ -303,6 +338,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         selectedNote,
         createNote,
         updateNote,
+        patchNote,
         deleteNote,
         toggleArchive,
         selectNote,
@@ -311,13 +347,13 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         toggleFilterCategory,
         setSortBy,
         setSaveStatus,
+        loadMore,
       }}
     >
       {children}
     </NotesContext.Provider>
   );
 }
-
 
 export function useNotes(): NotesContextValue {
   const ctx = useContext(NotesContext);

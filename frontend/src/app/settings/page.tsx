@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, type KeyboardEvent } from "react";
 import {
   Tag, SlidersHorizontal, PenLine, Palette,
   Plus, X, RotateCcw, User, Sun, Moon, ChevronDown, Check,
+  LogOut, Sparkles, Shield, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTagColors } from "@/contexts/TagColorContext";
@@ -18,33 +19,57 @@ import {
   type DefaultSort,
   type Theme,
 } from "@/contexts/SettingsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 type Section = "appearance" | "tags-categories" | "defaults" | "editor" | "account";
 
-const SECTIONS: { id: Section; label: string; icon: React.ElementType; description: string }[] = [
-  { id: "appearance",      label: "Appearance",       icon: Palette,          description: "Theme and visual preferences." },
-  { id: "tags-categories", label: "Tags & Categories", icon: Tag,              description: "Manage tags and categories available in the editor." },
-  { id: "defaults",        label: "Note defaults",     icon: SlidersHorizontal, description: "Default settings applied to every new note." },
-  { id: "editor",          label: "Editor",            icon: PenLine,          description: "Customise the writing experience." },
-  { id: "account",         label: "Account",           icon: User,             description: "Your profile and plan." },
+const SECTIONS: { id: Section; label: string; icon: React.ElementType }[] = [
+  { id: "appearance",      label: "Appearance",        icon: Palette },
+  { id: "tags-categories", label: "Tags & Categories",  icon: Tag },
+  { id: "defaults",        label: "Note Defaults",      icon: SlidersHorizontal },
+  { id: "editor",          label: "Editor",             icon: PenLine },
+  { id: "account",         label: "Account",            icon: User },
 ];
+
+/* ── helpers ─────────────────────────────────────────────────────────── */
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
 
 /* ── Primitives ─────────────────────────────────────────────────────── */
 
-function SectionHeader({ title, description }: { title: string; description: string }) {
+function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
-    <div className="mb-8">
-      <h2 className="text-[20px] font-bold tracking-[-0.02em] text-foreground">{title}</h2>
-      <p className="mt-1 text-[14px] text-muted-foreground">{description}</p>
+    <div className="mb-7">
+      <h2 className="text-[18px] font-semibold tracking-tight text-foreground">{title}</h2>
+      {description && (
+        <p className="mt-1 text-[13px] text-muted-foreground">{description}</p>
+      )}
     </div>
   );
 }
 
-function SettingCard({ children, className }: { children: React.ReactNode; className?: string }) {
+function RowGroup({ children, label }: { children: React.ReactNode; label?: string }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-card overflow-hidden", className)}>
-      {children}
+    <div className="mb-6">
+      {label && (
+        <p className="mb-2 px-0 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          {label}
+        </p>
+      )}
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-card/50">
+        {children}
+      </div>
     </div>
   );
 }
@@ -53,23 +78,40 @@ function SettingRow({
   label,
   description,
   children,
-  last,
+  noDivider,
 }: {
   label: string;
   description?: string;
   children: React.ReactNode;
-  last?: boolean;
+  noDivider?: boolean;
 }) {
   return (
-    <div className={cn("flex items-center justify-between gap-8 px-5 py-4", !last && "border-b border-border")}>
-      <div className="min-w-0">
-        <p className="text-[14px] font-medium text-foreground">{label}</p>
-        {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
+    <>
+      <div className="flex items-center justify-between gap-6 px-5 py-3.5">
+        <div className="min-w-0">
+          <p className="text-[13.5px] font-medium text-foreground">{label}</p>
+          {description && (
+            <p className="mt-0.5 text-[12.5px] leading-snug text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+        <div className="shrink-0">{children}</div>
       </div>
-      <div className="shrink-0">{children}</div>
+      {!noDivider && <Separator />}
+    </>
+  );
+}
+
+function InfoRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-5 py-3.5 text-[13px] text-muted-foreground">
+      {children}
     </div>
   );
 }
+
+/* ── Toggle ─────────────────────────────────────────────────────────── */
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -79,21 +121,22 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full",
-        "transition-colors duration-200",
-        checked ? "bg-blue" : "bg-border-strong"
+        "relative inline-flex h-[22px] w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
+        checked ? "bg-blue" : "bg-muted-foreground/25"
       )}
     >
       <span
         className={cn(
-          "absolute h-3.5 w-3.5 rounded-full bg-white shadow-sm",
+          "absolute size-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.3)]",
           "transition-transform duration-200",
-          checked ? "translate-x-[18px]" : "translate-x-[3px]"
+          checked ? "translate-x-[20px]" : "translate-x-[3px]"
         )}
       />
     </button>
   );
 }
+
+/* ── Segmented control ───────────────────────────────────────────────── */
 
 function SegmentedControl<T extends string>({
   options,
@@ -105,13 +148,13 @@ function SegmentedControl<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="flex rounded-md bg-accent p-0.5">
+    <div className="flex rounded-lg bg-accent/60 p-0.5">
       {options.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            "rounded px-3 py-1 text-[13px] font-medium transition-all duration-150",
+            "rounded-md px-3 py-1 text-[12.5px] font-medium transition-all duration-150",
             value === opt.value
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
@@ -121,24 +164,6 @@ function SegmentedControl<T extends string>({
         </button>
       ))}
     </div>
-  );
-}
-
-/* ── Plain chip (categories) ─────────────────────────────────────────── */
-
-function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[13px] font-medium text-foreground/80">
-      {label}
-      <button
-        type="button"
-        onClick={onRemove}
-        className="opacity-50 hover:opacity-100 transition-opacity"
-        aria-label={`Remove ${label}`}
-      >
-        <X className="size-3" strokeWidth={2} />
-      </button>
-    </span>
   );
 }
 
@@ -166,14 +191,14 @@ function TagColorDropdown({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-border bg-popover py-1 shadow-md"
+      className="absolute right-0 top-full z-50 mt-1.5 w-40 rounded-xl border border-border bg-popover py-1.5 shadow-lg"
     >
       {TAG_COLOR_NAMES.map((name, i) => (
         <button
           key={i}
           type="button"
           onMouseDown={(e) => { e.preventDefault(); onSelect(i); }}
-          className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[13px] transition-colors hover:bg-accent"
+          className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[12.5px] transition-colors hover:bg-accent"
         >
           <span
             className="size-3 shrink-0 rounded-sm"
@@ -181,7 +206,7 @@ function TagColorDropdown({
           />
           <span className="flex-1 text-left text-foreground/80">{name}</span>
           {i === currentIndex && (
-            <Check className="size-3 shrink-0 text-foreground/60" strokeWidth={2.5} />
+            <Check className="size-3 shrink-0 text-blue" strokeWidth={2.5} />
           )}
         </button>
       ))}
@@ -198,9 +223,9 @@ function TagRow({ label, onRemove }: { label: string; onRemove: () => void }) {
   const tagStyle = getTagStyle(label);
 
   return (
-    <div className="group relative flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/50">
+    <div className="group relative flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/40">
       <span
-        className="inline-flex min-w-0 max-w-[160px] shrink-0 items-center rounded px-2 py-0.5 text-[12px] font-medium"
+        className="inline-flex min-w-0 max-w-[160px] shrink-0 items-center rounded-md px-2 py-0.5 text-[12px] font-medium"
         style={tagStyle}
       >
         <span className="truncate">{label}</span>
@@ -211,14 +236,11 @@ function TagRow({ label, onRemove }: { label: string; onRemove: () => void }) {
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="flex items-center gap-1.5 rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <span
-              className="size-2.5 shrink-0 rounded-sm"
-              style={getTagStyleByIndex(colorIdx)}
-            />
+            <span className="size-2.5 shrink-0 rounded-sm" style={getTagStyleByIndex(colorIdx)} />
             <span>{TAG_COLOR_NAMES[colorIdx]}</span>
-            <ChevronDown className="size-3 opacity-60" strokeWidth={2} />
+            <ChevronDown className="size-3 opacity-50" strokeWidth={2} />
           </button>
 
           {open && (
@@ -233,13 +255,31 @@ function TagRow({ label, onRemove }: { label: string; onRemove: () => void }) {
         <button
           type="button"
           onClick={onRemove}
-          className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
+          className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
           aria-label={`Remove ${label}`}
         >
           <X className="size-3.5" strokeWidth={2} />
         </button>
       </div>
     </div>
+  );
+}
+
+/* ── Chip ────────────────────────────────────────────────────────────── */
+
+function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1 text-[12.5px] font-medium text-foreground/80">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="opacity-40 transition-opacity hover:opacity-100"
+        aria-label={`Remove ${label}`}
+      >
+        <X className="size-3" strokeWidth={2.5} />
+      </button>
+    </span>
   );
 }
 
@@ -270,7 +310,7 @@ function AddItemInput({
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-md border border-dashed border-border-strong px-3 py-2 transition-colors focus-within:border-blue hover:border-dim">
+    <div className="flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2 transition-colors focus-within:border-blue/60 hover:border-border-strong">
       <Plus className="size-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
       <input
         ref={inputRef}
@@ -279,7 +319,7 @@ function AddItemInput({
         onKeyDown={handleKey}
         onBlur={commit}
         placeholder={placeholder}
-        className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+        className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground/60"
       />
     </div>
   );
@@ -291,52 +331,61 @@ function AppearanceSection() {
   const { settings, updateSettings } = useSettings();
 
   return (
-    <div className="space-y-6">
-      <SettingCard>
-        <div className="px-5 py-5">
-          <p className="mb-4 text-[14px] font-medium text-foreground">Theme</p>
-          <div className="grid grid-cols-2 gap-3">
-            {(["light", "dark"] as Theme[]).map((t) => (
+    <>
+      <SectionHeading title="Appearance" description="Choose how Peblo looks and feels." />
+
+      <RowGroup label="Theme">
+        <div className="grid grid-cols-2 gap-3 p-4">
+          {(["light", "dark"] as Theme[]).map((t) => {
+            const active = settings.theme === t;
+            return (
               <button
                 key={t}
                 onClick={() => updateSettings({ theme: t })}
                 className={cn(
-                  "flex flex-col items-center gap-3 rounded-lg border p-5 transition-all duration-150",
-                  settings.theme === t
-                    ? "border-blue/40 bg-blue/5 shadow-sm"
-                    : "border-border hover:border-border-strong hover:bg-accent/60"
+                  "relative flex flex-col items-start gap-4 rounded-xl border p-4 text-left transition-all duration-150",
+                  active
+                    ? "border-blue/50 bg-blue/5 shadow-[0_0_0_1px_rgba(80,142,255,0.2)]"
+                    : "border-border/60 hover:border-border hover:bg-accent/40"
                 )}
               >
+                {active && (
+                  <span className="absolute right-3 top-3 flex size-4 items-center justify-center rounded-full bg-blue">
+                    <Check className="size-2.5 text-white" strokeWidth={3} />
+                  </span>
+                )}
+
                 <div
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-lg border",
+                    "flex size-9 items-center justify-center rounded-lg border",
                     t === "dark"
-                      ? "border-border bg-card"
-                      : "border-border bg-secondary"
+                      ? "border-border bg-[#1a1a1a]"
+                      : "border-border bg-[#f5f5f5]"
                   )}
                 >
                   {t === "dark"
-                    ? <Moon className="size-5 text-blue" strokeWidth={1.5} />
-                    : <Sun className="size-5 text-blue" strokeWidth={1.5} />
+                    ? <Moon className="size-4.5 text-blue" strokeWidth={1.5} />
+                    : <Sun className="size-4.5 text-amber-400" strokeWidth={1.5} />
                   }
                 </div>
-                <div className="text-center">
+
+                <div>
                   <p className={cn(
                     "text-[13px] font-semibold capitalize",
-                    settings.theme === t ? "text-blue" : "text-foreground"
+                    active ? "text-blue" : "text-foreground"
                   )}>
-                    {t}
+                    {t === "dark" ? "Dark" : "Light"}
                   </p>
                   <p className="mt-0.5 text-[12px] text-muted-foreground">
                     {t === "dark" ? "Easy on the eyes" : "Clean & bright"}
                   </p>
                 </div>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      </SettingCard>
-    </div>
+      </RowGroup>
+    </>
   );
 }
 
@@ -345,66 +394,57 @@ function TagsCategoriesSection() {
 
   const tagsAreDefault =
     JSON.stringify([...settings.tags].sort()) === JSON.stringify([...DEFAULT_TAGS].sort());
-  const catsAreDefault =
-    JSON.stringify([...settings.categories].sort()) === JSON.stringify([...DEFAULT_CATEGORIES].sort());
 
   return (
-    <div className="space-y-6">
-      <SettingCard>
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
-            <p className="text-[14px] font-medium text-foreground">Tags</p>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">
-              {settings.tags.length} tag{settings.tags.length !== 1 ? "s" : ""} — shown as suggestions in the editor
-            </p>
-          </div>
+    <>
+      <SectionHeading
+        title="Tags & Categories"
+        description="Manage the tags and categories available in the note editor."
+      />
+
+      <RowGroup label="Tags">
+        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+          <p className="text-[12.5px] text-muted-foreground">
+            {settings.tags.length} tag{settings.tags.length !== 1 ? "s" : ""} · shown as suggestions
+          </p>
           {!tagsAreDefault && (
             <button
               onClick={() => DEFAULT_TAGS.forEach((t) => addTag(t))}
-              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <RotateCcw className="size-3" strokeWidth={1.5} />
-              Restore defaults
+              Restore
             </button>
           )}
         </div>
+
         {settings.tags.length > 0 ? (
-          <div className="border-b border-border">
+          <div className="border-b border-border/60">
             {settings.tags.map((tag) => (
               <TagRow key={tag} label={tag} onRemove={() => removeTag(tag)} />
             ))}
           </div>
         ) : (
-          <p className="px-5 py-4 text-[13px] text-muted-foreground">No tags yet.</p>
+          <InfoRow>No tags yet.</InfoRow>
         )}
+
         <div className="px-4 py-3">
           <AddItemInput
-            placeholder="Type a tag and press Enter…"
+            placeholder="New tag — press Enter to add"
             onAdd={addTag}
             normalize={(v) => v.trim().toLowerCase().replace(/\s+/g, "-")}
           />
         </div>
-      </SettingCard>
+      </RowGroup>
 
-      <SettingCard>
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <div>
-            <p className="text-[14px] font-medium text-foreground">Categories</p>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">
-              {settings.categories.length} categor{settings.categories.length !== 1 ? "ies" : "y"} — shown in the category picker
-            </p>
-          </div>
-          {!catsAreDefault && (
-            <button
-              onClick={() => DEFAULT_CATEGORIES.forEach((c) => addCategory(c))}
-              className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <RotateCcw className="size-3" strokeWidth={1.5} />
-              Restore defaults
-            </button>
-          )}
+      <RowGroup label="Categories">
+        <div className="border-b border-border/60 px-4 py-3">
+          <p className="text-[12.5px] text-muted-foreground">
+            {settings.categories.length} categor{settings.categories.length !== 1 ? "ies" : "y"} · shown in the category picker
+          </p>
         </div>
-        <div className="px-5 py-4">
+
+        <div className="px-4 py-4">
           {settings.categories.length > 0 ? (
             <div className="mb-4 flex flex-wrap gap-2">
               {settings.categories.map((cat) => (
@@ -415,39 +455,44 @@ function TagsCategoriesSection() {
             <p className="mb-4 text-[13px] text-muted-foreground">No categories yet.</p>
           )}
           <AddItemInput
-            placeholder="Type a category and press Enter…"
+            placeholder="New category — press Enter to add"
             onAdd={addCategory}
             normalize={(v) => v.trim()}
           />
         </div>
-      </SettingCard>
+      </RowGroup>
 
       <div className="flex justify-end">
         <button
           onClick={resetToDefaults}
-          className="flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+          className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground/70 transition-colors hover:text-muted-foreground"
         >
-          <RotateCcw className="size-3.5" strokeWidth={1.5} />
+          <RotateCcw className="size-3" strokeWidth={1.5} />
           Reset all to defaults
         </button>
       </div>
-    </div>
+    </>
   );
 }
 
 const SORT_OPTIONS: { value: DefaultSort; label: string; description: string }[] = [
-  { value: "updatedAt", label: "Last edited",    description: "Most recently changed notes first" },
-  { value: "createdAt", label: "Date created",   description: "Newest notes first" },
-  { value: "title",     label: "Title A–Z",      description: "Alphabetical order" },
+  { value: "updatedAt", label: "Last edited",  description: "Most recently changed first" },
+  { value: "createdAt", label: "Date created", description: "Newest notes first" },
+  { value: "title",     label: "Title A–Z",    description: "Alphabetical order" },
 ];
 
 function DefaultsSection() {
   const { settings, updateSettings } = useSettings();
 
   return (
-    <div className="space-y-6">
-      <SettingCard>
-        <SettingRow label="Default visibility" description="Applied when creating a new note">
+    <>
+      <SectionHeading
+        title="Note Defaults"
+        description="Default settings applied whenever you create a new note."
+      />
+
+      <RowGroup label="New Note">
+        <SettingRow label="Visibility" description="Who can see new notes by default">
           <SegmentedControl<DefaultVisibility>
             options={[
               { value: "private", label: "Private" },
@@ -457,19 +502,23 @@ function DefaultsSection() {
             onChange={(v) => updateSettings({ defaultVisibility: v })}
           />
         </SettingRow>
-        <SettingRow label="Default sort order" description="How notes are ordered in the list" last>
+
+        <div className="px-5 py-3.5">
+          <p className="mb-3 text-[13.5px] font-medium text-foreground">Sort order</p>
           <div className="flex flex-col gap-1">
             {SORT_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => updateSettings({ defaultSort: opt.value })}
-                className="flex items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent"
+                className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-accent/60"
               >
                 <span className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-full border-2",
-                  settings.defaultSort === opt.value ? "border-blue" : "border-border-strong"
+                  "flex size-4 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors",
+                  settings.defaultSort === opt.value ? "border-blue" : "border-muted-foreground/40"
                 )}>
-                  {settings.defaultSort === opt.value && <span className="size-1.5 rounded-full bg-blue" />}
+                  {settings.defaultSort === opt.value && (
+                    <span className="size-1.5 rounded-full bg-blue" />
+                  )}
                 </span>
                 <div>
                   <p className="text-[13px] font-medium text-foreground">{opt.label}</p>
@@ -478,9 +527,9 @@ function DefaultsSection() {
               </button>
             ))}
           </div>
-        </SettingRow>
-      </SettingCard>
-    </div>
+        </div>
+      </RowGroup>
+    </>
   );
 }
 
@@ -488,26 +537,34 @@ function EditorSection() {
   const { settings, updateSettings } = useSettings();
 
   return (
-    <div className="space-y-6">
-      <SettingCard>
-        <SettingRow label="Spell check" description="Underline misspelled words in the editor">
+    <>
+      <SectionHeading
+        title="Editor"
+        description="Customise the writing experience."
+      />
+
+      <RowGroup label="Writing">
+        <SettingRow label="Spell check" description="Underline misspelled words">
           <Toggle checked={settings.editorSpellCheck} onChange={(v) => updateSettings({ editorSpellCheck: v })} />
         </SettingRow>
-        <SettingRow label="Show word count" description="Display word and character count at the bottom">
+        <SettingRow label="Word count" description="Show count at the bottom of the editor" noDivider>
           <Toggle checked={settings.showWordCount} onChange={(v) => updateSettings({ showWordCount: v })} />
         </SettingRow>
+      </RowGroup>
+
+      <RowGroup label="Display">
         <SettingRow label="Font size" description="Body text size inside the editor">
           <SegmentedControl<EditorFontSize>
             options={[
-              { value: "sm", label: "Small" },
-              { value: "md", label: "Default" },
-              { value: "lg", label: "Large" },
+              { value: "sm", label: "S" },
+              { value: "md", label: "M" },
+              { value: "lg", label: "L" },
             ]}
             value={settings.editorFontSize}
             onChange={(v) => updateSettings({ editorFontSize: v })}
           />
         </SettingRow>
-        <SettingRow label="Note list density" description="Vertical spacing of notes in the sidebar" last>
+        <SettingRow label="Note list density" description="Vertical spacing in the note list" noDivider>
           <SegmentedControl<NoteListDensity>
             options={[
               { value: "compact", label: "Compact" },
@@ -517,74 +574,123 @@ function EditorSection() {
             onChange={(v) => updateSettings({ noteListDensity: v })}
           />
         </SettingRow>
-      </SettingCard>
+      </RowGroup>
 
-      <SettingCard>
-        <div className="px-5 py-4">
-          <p className="text-[14px] font-medium text-foreground">Autosave</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Notes save automatically 700 ms after you stop typing. This is not yet configurable.
-          </p>
-        </div>
-      </SettingCard>
-    </div>
+      <RowGroup label="Autosave">
+        <InfoRow>
+          Notes save automatically 700 ms after you stop typing. Not yet configurable.
+        </InfoRow>
+      </RowGroup>
+    </>
   );
 }
 
 function AccountSection() {
-  return (
-    <div className="space-y-6">
-      <SettingCard>
-        <div className="flex items-center gap-4 border-b border-border px-5 py-5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border-strong bg-accent text-[14px] font-semibold text-subtle">
-            JD
-          </div>
-          <div>
-            <p className="text-[14px] font-semibold text-foreground">John Doe</p>
-            <p className="text-[13px] text-muted-foreground">john@example.com</p>
-          </div>
-          <span className="ml-auto rounded-full bg-accent px-3 py-1 text-[12px] font-medium text-muted-foreground">
-            Free plan
-          </span>
-        </div>
-        <SettingRow label="Display name" description="Shown in the sidebar">
-          <input
-            defaultValue="John Doe"
-            className="w-40 rounded-md border border-border bg-background px-3 py-1.5 text-[13px] text-foreground outline-none transition-colors hover:border-border-strong focus:border-blue focus:ring-0"
-          />
-        </SettingRow>
-        <SettingRow label="Email" last>
-          <input
-            defaultValue="john@example.com"
-            className="w-52 rounded-md border border-border bg-background px-3 py-1.5 text-[13px] text-foreground outline-none transition-colors hover:border-border-strong focus:border-blue focus:ring-0"
-          />
-        </SettingRow>
-      </SettingCard>
+  const { user, logout } = useAuth();
 
-      <SettingCard>
+  const displayName = user?.name ?? "—";
+  const email = user?.email ?? "—";
+  const initials = user ? getInitials(user.name) : "?";
+
+  const memberSince = user?.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : null;
+
+  return (
+    <>
+      <SectionHeading title="Account" description="Your profile and plan details." />
+
+      {/* Profile card */}
+      <div className="mb-6 overflow-hidden rounded-xl border border-border/60 bg-card/50">
+        <div className="flex items-center gap-4 px-5 py-5">
+          <Avatar size="lg" className="size-12 ring-2 ring-border">
+            <AvatarFallback className="bg-gradient-to-br from-blue/30 to-blue/10 text-[15px] font-semibold text-blue">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[15px] font-semibold text-foreground">{displayName}</p>
+            <p className="truncate text-[13px] text-muted-foreground">{email}</p>
+            {memberSince && (
+              <p className="mt-0.5 text-[12px] text-muted-foreground/60">
+                Member since {memberSince}
+              </p>
+            )}
+          </div>
+
+          <Badge className="shrink-0 rounded-full bg-accent px-3 py-1 text-[11.5px] font-medium text-muted-foreground border-0">
+            Free plan
+          </Badge>
+        </div>
+      </div>
+
+      {/* Upgrade */}
+      <RowGroup label="Plan">
         <div className="px-5 py-5">
-          <p className="text-[14px] font-semibold text-foreground">Upgrade to Pro</p>
-          <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">
-            You&apos;re on the Free plan. Upgrade to unlock AI summaries, unlimited notes, and shared workspaces.
-          </p>
-          <button className="mt-4 rounded-md bg-blue px-4 py-2 text-[13px] font-medium text-white transition-opacity hover:opacity-90">
+          <div className="mb-4 flex items-start gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue/10">
+              <Zap className="size-4 text-blue" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-[13.5px] font-semibold text-foreground">Upgrade to Pro</p>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
+                Unlock AI summaries, unlimited notes, and shared workspaces with a Pro plan.
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-4 grid grid-cols-3 gap-2">
+            {[
+              { icon: Sparkles, label: "AI Summaries" },
+              { icon: Shield,   label: "Shared Spaces" },
+              { icon: Zap,      label: "Unlimited Notes" },
+            ].map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center gap-1.5 rounded-lg border border-border/50 bg-accent/30 py-3 text-center"
+              >
+                <Icon className="size-4 text-muted-foreground" strokeWidth={1.5} />
+                <span className="text-[11.5px] font-medium text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <button className="rounded-lg bg-blue px-4 py-2 text-[13px] font-medium text-white transition-opacity hover:opacity-90">
             Upgrade to Pro
           </button>
         </div>
-      </SettingCard>
+      </RowGroup>
 
-      <SettingCard>
+      {/* Danger zone */}
+      <RowGroup label="Danger Zone">
         <div className="px-5 py-4">
-          <p className="text-[14px] font-medium text-destructive">Danger zone</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">
+          <p className="mb-1 text-[13.5px] font-medium text-foreground">Sign out</p>
+          <p className="mb-3 text-[12.5px] text-muted-foreground">
+            Sign out of your account on this device.
+          </p>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 rounded-lg border border-border/60 px-3.5 py-1.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:border-border hover:bg-accent hover:text-foreground"
+          >
+            <LogOut className="size-3.5" strokeWidth={1.5} />
+            Sign out
+          </button>
+        </div>
+
+        <Separator />
+
+        <div className="px-5 py-4">
+          <p className="mb-1 text-[13.5px] font-medium text-destructive">Delete account</p>
+          <p className="mb-3 text-[12.5px] text-muted-foreground">
             Permanently delete your account and all its data. This cannot be undone.
           </p>
-          <button className="mt-3 rounded-md border border-destructive/30 px-4 py-1.5 text-[13px] text-destructive transition-colors hover:bg-destructive/8">
+          <button className="rounded-lg border border-destructive/30 px-3.5 py-1.5 text-[12.5px] font-medium text-destructive transition-colors hover:bg-destructive/8">
             Delete account
           </button>
         </div>
-      </SettingCard>
-    </div>
+      </RowGroup>
+    </>
   );
 }
 
@@ -592,7 +698,7 @@ function AccountSection() {
 
 export default function SettingsPage() {
   const [active, setActive] = useState<Section>("appearance");
-  const activeSection = SECTIONS.find((s) => s.id === active)!;
+  const { user } = useAuth();
 
   const content: Record<Section, React.ReactNode> = {
     appearance:        <AppearanceSection />,
@@ -604,40 +710,58 @@ export default function SettingsPage() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-background">
-      {/* Left nav */}
-      <div className="flex w-52 shrink-0 flex-col border-r border-border bg-sidebar">
-        <div className="flex h-[52px] items-center border-b border-sidebar-border px-5">
-          <span className="text-[14px] font-semibold text-foreground">Settings</span>
-        </div>
-        <nav className="flex flex-1 flex-col overflow-y-auto px-2 py-2">
-          {SECTIONS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setActive(id)}
-              className={cn(
-                "flex items-center gap-2.5 rounded-md px-3 py-2 mb-px text-left text-[14px] font-medium transition-colors",
-                active === id
-                  ? "bg-sidebar-accent text-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-              )}
-            >
-              <Icon
-                className={cn(
-                  "size-4 shrink-0",
-                  active === id ? "text-foreground" : "text-muted-foreground"
-                )}
-                strokeWidth={1.5}
-              />
-              {label}
-            </button>
-          ))}
-        </nav>
-      </div>
 
-      {/* Content */}
+      {/* ── Left nav ──────────────────────────────────────────────────── */}
+      <aside className="flex w-[220px] shrink-0 flex-col border-r border-border/60 bg-sidebar">
+        <div className="flex h-[52px] items-center border-b border-sidebar-border/60 px-5">
+          <span className="text-[13.5px] font-semibold text-foreground">Settings</span>
+        </div>
+
+        <nav className="flex flex-1 flex-col overflow-y-auto px-2.5 py-3 gap-0.5">
+          {SECTIONS.map(({ id, label, icon: Icon }) => {
+            const isActive = active === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActive(id)}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13.5px] font-medium transition-colors",
+                  isActive
+                    ? "bg-sidebar-accent text-foreground"
+                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                )}
+              >
+                <Icon
+                  className={cn("size-4 shrink-0 transition-colors", isActive ? "text-foreground" : "text-muted-foreground/70")}
+                  strokeWidth={isActive ? 2 : 1.75}
+                />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom user strip */}
+        {user && (
+          <div className="border-t border-sidebar-border/60 px-3.5 py-3">
+            <div className="flex items-center gap-2.5">
+              <Avatar size="sm" className="ring-1 ring-border">
+                <AvatarFallback className="bg-blue/10 text-[11px] font-semibold text-blue">
+                  {getInitials(user.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="truncate text-[12.5px] font-medium text-foreground">{user.name}</p>
+                <p className="truncate text-[11.5px] text-muted-foreground/70">{user.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </aside>
+
+      {/* ── Content ───────────────────────────────────────────────────── */}
       <ScrollArea className="flex-1">
-        <div className="mx-auto max-w-2xl px-10 py-10">
-          <SectionHeader title={activeSection.label} description={activeSection.description} />
+        <div className="mx-auto max-w-[640px] px-10 py-10">
           {content[active]}
         </div>
       </ScrollArea>

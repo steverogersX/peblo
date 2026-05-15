@@ -11,7 +11,9 @@ router.use(requireAuth);
 
 router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await notesService.getAllNotes(req.user!.userId);
+    const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const data = await notesService.getAllNotes(req.user!.userId, cursor, limit);
     res.status(httpStatus.OK).json({ data });
   } catch (err) {
     next(err);
@@ -40,6 +42,15 @@ router.delete("/:id", async (req: Request, res: Response, next: NextFunction) =>
   try {
     const id = await notesService.deleteNote(req.user!.userId, req.params.id);
     res.status(httpStatus.OK).json({ data: { id } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/:id/summarize", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await notesService.summarizeNote(req.user!.userId, req.params.id);
+    res.status(httpStatus.OK).json({ data });
   } catch (err) {
     next(err);
   }

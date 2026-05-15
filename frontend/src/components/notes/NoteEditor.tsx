@@ -6,9 +6,11 @@ import {
   MoreHorizontal, Loader2, FileText,
   Maximize2, Minimize2, ArrowLeft,
   Tag, FolderOpen, ChevronRight,
+  CalendarDays,
 } from "lucide-react";
 import { RichEditor } from "@/components/notes/RichEditor";
 import { TagInput } from "@/components/notes/TagInput";
+import { NoteSharePopover } from "@/components/notes/NoteSharePopover";
 import { useNotes } from "@/contexts/NotesContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import {
@@ -30,22 +32,27 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 
 const SAVE_DELAY = 700;
-const CONTENT_MAX = "mx-auto w-full max-w-[1020px]";
+const CONTENT_MAX = "mx-auto w-full max-w-[900px]";
 
 interface NoteEditorProps {
   focusMode?: boolean;
   onToggleFocus?: () => void;
 }
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
 export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps) {
   const {
     selectedNote, updateNote, deleteNote, toggleArchive,
-    setSaveStatus, saveStatus,
+    setSaveStatus, saveStatus, selectNote,
   } = useNotes();
   const { settings } = useSettings();
 
   const [title, setTitle] = useState("");
-  const [propsOpen, setPropsOpen] = useState(true);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -96,78 +103,91 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
     );
   }
 
-  const pad = focusMode ? "px-16" : "px-14";
+  const pad = focusMode ? "px-20" : "px-14";
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
 
-      {/* ── Minimal top bar ── */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-3 py-1.5">
+      {/* ── Notion-style ghost top bar ── */}
+      <div className="group/topbar flex shrink-0 items-center justify-between px-3.5 py-2">
 
+        {/* Left: back button (focus) or breadcrumb */}
         {focusMode ? (
-          <Button variant="ghost" size="sm" onClick={onToggleFocus} className="gap-1.5 text-[13px] text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleFocus}
+            className="gap-1.5 text-[12.5px] text-muted-foreground/50 hover:text-muted-foreground/80 hover:bg-accent/40"
+          >
             <ArrowLeft className="size-3.5" strokeWidth={1.5} />
             Notes
           </Button>
         ) : (
-          <span className="select-none text-[12px] text-muted-foreground/40">
-            {saveStatus === "saving" ? (
-              <span className="flex items-center gap-1">
-                <Loader2 className="size-3 animate-spin" strokeWidth={1.5} />
-                Saving…
-              </span>
-            ) : "Saved"}
-          </span>
+          <div className="flex select-none items-center gap-1 text-[12px] text-muted-foreground/30">
+            <button
+              type="button"
+              onClick={() => selectNote(null)}
+              className="rounded px-0.5 transition-colors hover:text-muted-foreground/70 cursor-pointer"
+            >
+              Notes
+            </button>
+            <ChevronRight className="size-3 shrink-0" strokeWidth={1.5} />
+            <span className="max-w-[180px] truncate text-muted-foreground/50 cursor-default">
+              {title || "Untitled"}
+            </span>
+          </div>
         )}
 
+        {/* Right: share + save status + actions */}
         <div className="flex items-center gap-0.5">
-          {focusMode && (
-            <span className="mr-2 select-none text-[12px] text-muted-foreground/40">
-              {saveStatus === "saving" ? (
-                <span className="flex items-center gap-1">
-                  <Loader2 className="size-3 animate-spin" strokeWidth={1.5} />
-                  Saving…
-                </span>
-              ) : "Saved"}
-            </span>
-          )}
+          <NoteSharePopover
+            noteId={selectedNote.id}
+            noteTitle={title}
+            visibility={selectedNote.visibility ?? "private"}
+          />
+          {/* Save status — fades in only when saving */}
+          <span className="mr-2 select-none text-[11px] text-muted-foreground/30 tabular-nums">
+            {saveStatus === "saving" ? (
+              <span className="flex items-center gap-1 text-muted-foreground/45">
+                <Loader2 className="size-3 animate-spin" strokeWidth={1.5} />
+                Saving
+              </span>
+            ) : (
+              <span className="opacity-0 group-hover/topbar:opacity-100 transition-opacity duration-200">
+                Saved
+              </span>
+            )}
+          </span>
 
-          {/* Focus mode toggle with tooltip */}
+          {/* Focus toggle */}
           <Tooltip>
             <TooltipTrigger
               onClick={onToggleFocus}
-              className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }), "text-muted-foreground")}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "text-muted-foreground/40 hover:text-muted-foreground/80 opacity-0 group-hover/topbar:opacity-100 transition-opacity duration-150"
+              )}
             >
               {focusMode
                 ? <Minimize2 className="size-3.5" strokeWidth={1.5} />
                 : <Maximize2 className="size-3.5" strokeWidth={1.5} />}
             </TooltipTrigger>
             <TooltipContent className="text-[12px]">
-              {focusMode ? "Exit focus mode (Esc)" : "Focus mode"}
+              {focusMode ? "Exit focus mode" : "Focus mode"}
             </TooltipContent>
           </Tooltip>
 
-          {/* Actions kebab */}
+          {/* More menu */}
           <DropdownMenu>
             <DropdownMenuTrigger
-              className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }), "text-muted-foreground")}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "text-muted-foreground/40 hover:text-muted-foreground/80 opacity-0 group-hover/topbar:opacity-100 transition-opacity duration-150"
+              )}
             >
               <MoreHorizontal className="size-4" strokeWidth={1.5} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom" sideOffset={6} className="w-52">
-              <DropdownMenuItem
-                onClick={() =>
-                  updateNote(selectedNote.id, {
-                    visibility: selectedNote.visibility === "private" ? "public" : "private",
-                  })
-                }
-                className="gap-2 text-[13px]"
-              >
-                {selectedNote.visibility === "public"
-                  ? <Globe className="size-3.5 text-muted-foreground" strokeWidth={1.5} />
-                  : <Lock className="size-3.5 text-muted-foreground" strokeWidth={1.5} />}
-                Make {selectedNote.visibility === "public" ? "private" : "public"}
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => toggleArchive(selectedNote.id)}
                 className="gap-2 text-[13px]"
@@ -189,9 +209,9 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
         </div>
       </div>
 
-      {/* ── Single scrollable body ── */}
+      {/* ── Scrollable document body ── */}
       <div className="flex-1 overflow-y-auto">
-        <div className={cn(CONTENT_MAX, pad, "pt-16 pb-2")}>
+        <div className={cn(CONTENT_MAX, pad, "pt-14 pb-4")}>
 
           {/* Title */}
           <textarea
@@ -211,83 +231,105 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
             placeholder="Untitled"
             rows={1}
             className={cn(
-              "w-full resize-none overflow-hidden bg-transparent font-bold leading-tight tracking-[-0.03em] text-foreground outline-none",
-              "placeholder:text-muted-foreground/20",
-              focusMode ? "text-[46px]" : "text-[40px]"
+              "w-full resize-none overflow-hidden bg-transparent font-extrabold leading-[1.15] tracking-[-0.03em] text-foreground outline-none",
+              "placeholder:text-foreground/10",
+              focusMode ? "text-[48px]" : "text-[40px]"
             )}
           />
 
-          {/* ── Properties ── */}
-          <div className="mt-5">
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={() => setPropsOpen((v) => !v)}
-              className="gap-1 text-[12px] text-muted-foreground/40 hover:text-muted-foreground/70 px-1"
-            >
-              <ChevronRight
-                className={cn("size-3 transition-transform duration-150", propsOpen && "rotate-90")}
-                strokeWidth={1.5}
-              />
-              {propsOpen ? "Properties" : "Show properties"}
-            </Button>
+          {/* ── Notion-style property rows ── */}
+          <div className="mt-6 mb-1">
 
-            {propsOpen && (
-              <div className="mt-2 space-y-0.5">
-                {/* Tags row */}
-                <div className="group/row -mx-2 flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50">
-                  <span className="flex w-28 shrink-0 items-center gap-1.5 pt-0.5 text-[13px] text-muted-foreground/70">
-                    <Tag className="size-3.5" strokeWidth={1.5} />
-                    Tags
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <TagInput
-                      tags={selectedNote.tags}
-                      suggestions={settings.tags}
-                      onChange={(tags) => updateNote(selectedNote.id, { tags })}
-                    />
-                  </div>
-                </div>
-
-                {/* Category row */}
-                <div className="group/row -mx-2 flex items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent/50">
-                  <span className="flex w-28 shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground/70">
-                    <FolderOpen className="size-3.5" strokeWidth={1.5} />
-                    Category
-                  </span>
-                  <Select
-                    value={selectedNote.category ?? "none"}
-                    onValueChange={(val) =>
-                      updateNote(selectedNote.id, {
-                        category: val === "none" ? null : val || undefined,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="h-auto w-auto min-w-0 border-0 bg-transparent px-2 py-1.5 text-[13px] shadow-none focus:ring-0 focus:ring-offset-0 data-[placeholder]:text-muted-foreground/50">
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none" className="text-[13px]">None</SelectItem>
-                      {settings.categories.map((c) => (
-                        <SelectItem key={c} value={c} className="text-[13px]">{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {/* Tags */}
+            <div className="group/prop flex min-h-[32px] items-start rounded-md transition-colors duration-100 hover:bg-accent/25">
+              <div className="flex w-[140px] shrink-0 items-center gap-2 px-2 py-[7px] text-[12.5px] font-medium text-muted-foreground/40 select-none">
+                <Tag className="size-3.5 shrink-0" strokeWidth={1.5} />
+                Tags
               </div>
-            )}
+              <div className="min-w-0 flex-1 px-2 py-1">
+                <TagInput
+                  tags={selectedNote.tags}
+                  suggestions={settings.tags}
+                  onChange={(tags) => updateNote(selectedNote.id, { tags })}
+                />
+              </div>
+            </div>
+
+            {/* Category */}
+            <div className="group/prop flex min-h-[32px] items-center rounded-md transition-colors duration-100 hover:bg-accent/25">
+              <div className="flex w-[140px] shrink-0 items-center gap-2 px-2 py-[7px] text-[12.5px] font-medium text-muted-foreground/40 select-none">
+                <FolderOpen className="size-3.5 shrink-0" strokeWidth={1.5} />
+                Category
+              </div>
+              <div className="flex-1 px-1">
+                <Select
+                  value={selectedNote.category ?? "none"}
+                  onValueChange={(val) =>
+                    updateNote(selectedNote.id, {
+                      category: val === "none" ? null : val || undefined,
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-auto w-auto min-w-[72px] border-0 bg-transparent px-2 py-[7px] text-[13px] text-foreground/60 shadow-none focus:ring-0 focus:ring-offset-0 data-[placeholder]:text-muted-foreground/30 hover:text-foreground/80 transition-colors">
+                    <SelectValue placeholder="Empty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none" className="text-[13px]">None</SelectItem>
+                    {settings.categories.map((c) => (
+                      <SelectItem key={c} value={c} className="text-[13px]">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Visibility */}
+            <div className="group/prop flex min-h-[32px] items-center rounded-md transition-colors duration-100 hover:bg-accent/25">
+              <div className="flex w-[140px] shrink-0 items-center gap-2 px-2 py-[7px] text-[12.5px] font-medium text-muted-foreground/40 select-none">
+                {selectedNote.visibility === "public"
+                  ? <Globe className="size-3.5 shrink-0" strokeWidth={1.5} />
+                  : <Lock className="size-3.5 shrink-0" strokeWidth={1.5} />}
+                Visibility
+              </div>
+              <div className="flex-1 px-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateNote(selectedNote.id, {
+                      visibility: selectedNote.visibility === "private" ? "public" : "private",
+                    })
+                  }
+                  className="rounded px-1 py-[5px] text-[13px] capitalize text-foreground/55 transition-colors hover:bg-accent/50 hover:text-foreground/80"
+                >
+                  {selectedNote.visibility ?? "private"}
+                </button>
+              </div>
+            </div>
+
+            {/* Last edited — read-only */}
+            <div className="flex min-h-[32px] items-center">
+              <div className="flex w-[140px] shrink-0 items-center gap-2 px-2 py-[7px] text-[12.5px] font-medium text-muted-foreground/40 select-none">
+                <CalendarDays className="size-3.5 shrink-0" strokeWidth={1.5} />
+                Last edited
+              </div>
+              <div className="flex-1 px-2 py-[7px] text-[13px] text-muted-foreground/35 select-none">
+                {formatDate(selectedNote.updatedAt)}
+              </div>
+            </div>
+
           </div>
 
-          <div className="mt-6 border-t border-border/40" />
+          {/* Subtle divider before content */}
+          <div className="mt-5 mb-1 border-t border-border/25" />
         </div>
 
-        {/* ── Editor content ── */}
-        <div className={cn(CONTENT_MAX, pad, "pt-5 pb-40")}>
+        {/* ── Editor body ── */}
+        <div className={cn(CONTENT_MAX, pad, "pt-3 pb-48")}>
           <RichEditor
             key={selectedNote.id}
             content={selectedNote.content}
             onChange={handleContentChange}
-            placeholder="Start writing… (select text for formatting)"
+            placeholder="Start writing…"
           />
         </div>
       </div>

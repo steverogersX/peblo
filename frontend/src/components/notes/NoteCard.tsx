@@ -17,7 +17,10 @@ function timeAgo(iso: string): string {
   if (mins < 60) return `${mins}m`;
   const h = Math.floor(mins / 60);
   if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  if (d < 30) return `${Math.floor(d / 7)}w`;
+  return `${Math.floor(d / 30)}mo`;
 }
 
 function stripMarkdown(md: string): string {
@@ -35,72 +38,59 @@ function stripMarkdown(md: string): string {
 
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const { getTagStyle } = useTagColors();
-  const preview = stripMarkdown(note.content).slice(0, 80);
-  const maxTags = note.category ? 2 : 3;
-  const visibleTags = note.tags.slice(0, maxTags);
-  const overflow = note.tags.length - visibleTags.length;
+  const preview = stripMarkdown(note.content).slice(0, 120);
+  const hasMeta = note.category || note.tags.length > 0;
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "mx-1 mb-px w-[calc(100%-8px)] rounded-md px-3 py-2.5 text-left",
-        selected ? "bg-accent" : "hover:bg-accent/60"
+        "group w-full rounded-md px-3 py-2.5 text-left transition-colors duration-100",
+        selected
+          ? "bg-sidebar-accent"
+          : "hover:bg-sidebar-accent/50"
       )}
     >
-      {/* Title */}
-      <p className={cn(
-        "truncate text-[13.5px] font-medium leading-snug",
-        selected ? "text-foreground" : "text-foreground/90"
-      )}>
-        {note.title || "Untitled"}
-      </p>
+      {/* Title + timestamp */}
+      <div className="flex items-baseline justify-between gap-2">
+        <p className={cn(
+          "min-w-0 flex-1 truncate text-[13px] leading-snug tracking-[-0.01em]",
+          selected ? "font-medium text-foreground" : "font-[450] text-foreground/85"
+        )}>
+          {note.title || "Untitled"}
+        </p>
+        <span className="shrink-0 text-[10.5px] tabular-nums text-muted-foreground/35">
+          {timeAgo(note.updatedAt)}
+        </span>
+      </div>
 
       {/* Preview */}
       {preview && (
-        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-muted-foreground/70">
+        <p className="mt-0.5 line-clamp-2 text-[11.5px] leading-[1.5] text-muted-foreground/50">
           {preview}
         </p>
       )}
 
-      {/* Metadata row */}
-      <div className="mt-1.5 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-1 overflow-hidden">
-          {/* Category as plain text */}
+      {/* Category + tags */}
+      {hasMeta && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
           {note.category && (
-            <>
-              <span className="shrink-0 truncate text-[11px] text-muted-foreground/50">
-                {note.category}
-              </span>
-              {visibleTags.length > 0 && (
-                <span className="shrink-0 text-[11px] text-muted-foreground/25">·</span>
-              )}
-            </>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/30">
+              {note.category}
+            </span>
           )}
-
-          {/* Tags as small colored chips */}
-          {visibleTags.map((t) => (
+          {note.tags.map((t) => (
             <span
               key={t}
-              className="shrink-0 rounded px-1.5 py-px text-[10.5px] font-medium leading-normal"
+              className="rounded px-1.5 py-px text-[10px] font-medium leading-normal"
               style={getTagStyle(t)}
             >
               {t}
             </span>
           ))}
-
-          {overflow > 0 && (
-            <span className="shrink-0 text-[11px] text-muted-foreground/40">
-              +{overflow}
-            </span>
-          )}
         </div>
-
-        <span className="shrink-0 text-[11px] text-muted-foreground/40">
-          {timeAgo(note.updatedAt)}
-        </span>
-      </div>
+      )}
     </button>
   );
 }

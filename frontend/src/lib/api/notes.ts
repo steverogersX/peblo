@@ -19,9 +19,20 @@ type UpdatePayload = {
   isArchived?: boolean;
 };
 
+export type NotePageResult = {
+  notes: Note[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
 export const notesApi = {
-  list: () =>
-    request<Note[]>("/api/notes"),
+  list: (params?: { cursor?: string; limit?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.cursor) qs.set("cursor", params.cursor);
+    if (params?.limit) qs.set("limit", String(params.limit));
+    const query = qs.toString();
+    return request<NotePageResult>(`/api/notes${query ? `?${query}` : ""}`);
+  },
 
   create: (body: CreatePayload) =>
     request<Note>("/api/notes", {
@@ -37,4 +48,7 @@ export const notesApi = {
 
   remove: (id: string) =>
     request<{ id: string }>(`/api/notes/${id}`, { method: "DELETE" }),
+
+  summarize: (id: string) =>
+    request<Note>(`/api/notes/${id}/summarize`, { method: "POST" }),
 };
