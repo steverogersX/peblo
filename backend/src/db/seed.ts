@@ -1,9 +1,14 @@
 import "dotenv/config";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 import { db } from "./index";
-import { notes } from "./schema";
+import { notes, users } from "./schema";
+import { eq } from "drizzle-orm";
 
-const SEED_NOTES = [
+const SEED_EMAIL = "seed@peblo.dev";
+const SEED_PASSWORD = "Seed1234";
+
+const SEED_NOTES_DATA = [
   {
     id: randomUUID(),
     title: "Sprint Planning — May 2026",
@@ -116,9 +121,21 @@ const SEED_NOTES = [
 
 async function seed() {
   console.log("Seeding database...");
-  await db.delete(notes);
-  await db.insert(notes).values(SEED_NOTES);
-  console.log(`Inserted ${SEED_NOTES.length} notes.`);
+
+  // Upsert seed user
+  let [seedUser] = await db.select().from(users).where(eq(users.email, SEED_EMAIL)).limit(1);
+  if (!seedUser) {
+    const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12);
+    [seedUser] = await db
+      .insert(users)
+      .values({ name: "Seed User", email: SEED_EMAIL, passwordHash })
+      .returning();
+  }
+
+  await db.delete(notes).where(eq(notes.userId, seedUser.id));
+  await db.insert(notes).values(SEED_NOTES_DATA.map((n) => ({ ...n, userId: seedUser.id })));
+  console.log(`Inserted ${SEED_NOTES_DATA.length} notes for seed user (${SEED_EMAIL}).`);
+  console.log(`Seed user password: ${SEED_PASSWORD}`);
   process.exit(0);
 }
 
