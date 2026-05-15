@@ -1,8 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Clock, ArrowUpRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useDashboard } from "@/contexts/DashboardContext";
+import { useNotes } from "@/contexts/NotesContext";
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -17,9 +20,16 @@ function timeAgo(iso: string): string {
 }
 
 export function RecentNotes() {
+  const router = useRouter();
   const { insights, status } = useDashboard();
+  const { selectNote } = useNotes();
   const loading = status === "loading" || status === "idle";
   const notes = insights?.recentlyEditedNotes ?? [];
+
+  function openNote(id: string) {
+    selectNote(id);
+    router.push("/notes");
+  }
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -28,9 +38,15 @@ export function RecentNotes() {
           <Clock className="size-4 text-muted-foreground" strokeWidth={1.5} />
           <span className="text-[14px] font-semibold text-foreground">Recently edited</span>
         </div>
-        <button className="flex items-center gap-1 text-[13px] text-blue hover:underline">
-          View all <ArrowUpRight className="size-3.5" strokeWidth={1.5} />
-        </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/notes")}
+          className="h-6 gap-1 text-[13px] text-blue hover:text-blue"
+        >
+          View all
+          <ArrowUpRight className="size-3.5" strokeWidth={1.5} />
+        </Button>
       </div>
 
       <div>
@@ -41,10 +57,25 @@ export function RecentNotes() {
                 <Skeleton className="ml-auto h-3 w-10" />
               </div>
             ))
+          : notes.length === 0
+          ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-[13px] text-muted-foreground">No notes yet.</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/notes")}
+                className="mt-2 text-[13px] text-blue hover:text-blue"
+              >
+                Create your first note
+              </Button>
+            </div>
+          )
           : notes.map((note, idx) => (
-              <div
+              <button
                 key={note.id}
-                className={`group flex cursor-pointer items-center gap-4 px-5 py-3.5 transition-colors hover:bg-accent/60 ${idx < notes.length - 1 ? "border-b border-border" : ""}`}
+                onClick={() => openNote(note.id)}
+                className={`group flex w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left transition-colors hover:bg-accent/60 ${idx < notes.length - 1 ? "border-b border-border" : ""}`}
               >
                 <p className="flex-1 truncate text-[14px] text-foreground/80 group-hover:text-foreground transition-colors">
                   {note.title || "Untitled"}
@@ -56,7 +87,7 @@ export function RecentNotes() {
                   className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-60"
                   strokeWidth={1.5}
                 />
-              </div>
+              </button>
             ))}
       </div>
     </div>

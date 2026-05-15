@@ -12,9 +12,6 @@ import {
 import type { Note, UpdateNote } from "@/lib/schemas/note";
 import { notesApi } from "@/lib/api/notes";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export type SaveStatus = "saved" | "saving" | "unsaved";
 export type SortBy = "updatedAt" | "createdAt" | "title";
@@ -43,9 +40,6 @@ type NotesAction =
   | { type: "SET_SORT"; payload: SortBy }
   | { type: "SET_SAVE_STATUS"; payload: SaveStatus };
 
-// ---------------------------------------------------------------------------
-// Reducer
-// ---------------------------------------------------------------------------
 
 const initialState: NotesState = {
   notes: [],
@@ -131,9 +125,6 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Derived selectors
-// ---------------------------------------------------------------------------
 
 function selectFilteredNotes(state: NotesState): Note[] {
   let notes = state.notes.filter((n) => !n.isArchived);
@@ -166,9 +157,6 @@ function selectAllTags(notes: Note[]): string[] {
   return [...new Set(notes.flatMap((n) => n.tags))].sort();
 }
 
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
 
 interface NotesContextValue extends NotesState {
   filteredNotes: Note[];
@@ -187,9 +175,6 @@ interface NotesContextValue extends NotesState {
 
 const NotesContext = createContext<NotesContextValue | null>(null);
 
-// ---------------------------------------------------------------------------
-// Provider
-// ---------------------------------------------------------------------------
 
 export function NotesProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(notesReducer, initialState);
@@ -302,9 +287,6 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
 
 export function useNotes(): NotesContextValue {
   const ctx = useContext(NotesContext);
