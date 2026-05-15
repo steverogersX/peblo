@@ -3,6 +3,8 @@ import type { ProductivityInsights } from "@/lib/schemas/insights";
 export const MOCK_INSIGHTS: ProductivityInsights = {
   totalNotes: 24,
   archivedNotes: 3,
+  notesThisWeek: 5,
+  wordsWritten: 3840,
   recentlyEditedNotes: [
     {
       id: "n1",
