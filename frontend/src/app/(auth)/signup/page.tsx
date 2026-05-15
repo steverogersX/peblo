@@ -7,6 +7,7 @@ import { PenLine, Eye, EyeOff, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PASSWORD_RULES = [
   { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -16,25 +17,30 @@ const PASSWORD_RULES = [
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signup } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const allRulesMet = PASSWORD_RULES.every((r) => r.test(password));
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!allRulesMet) return;
+    setError("");
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
-  }
-
-  function handleGoogle() {
-    setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
+    try {
+      await signup(name, email, password);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Signup failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -57,13 +63,12 @@ export default function SignupPage() {
 
         {/* Card */}
         <div className="rounded-xl border border-border bg-card px-8 py-7 shadow-sm">
-          {/* Google */}
+          {/* Google (UI only) */}
           <Button
             variant="outline"
             className="w-full h-9 gap-2.5 text-[14px] font-medium"
             type="button"
-            onClick={handleGoogle}
-            disabled={loading}
+            disabled
           >
             <GoogleIcon />
             Continue with Google
@@ -78,6 +83,12 @@ export default function SignupPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                {error}
+              </p>
+            )}
+
             <div className="space-y-1.5">
               <label className="block text-[13px] font-medium text-foreground/80">
                 Full name

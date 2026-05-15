@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db";
 import { notes, type NoteRow } from "../db/schema";
 import type { CreateNoteInput, UpdateNoteInput } from "../lib/schemas";
@@ -36,32 +36,32 @@ function serialize(row: NoteRow): SerializedNote {
   };
 }
 
-export async function getAllNotes(): Promise<SerializedNote[]> {
-  const rows = await db.select().from(notes);
+export async function getAllNotes(userId: string): Promise<SerializedNote[]> {
+  const rows = await db.select().from(notes).where(eq(notes.userId, userId));
   return rows.map(serialize);
 }
 
-export async function createNote(input: CreateNoteInput): Promise<SerializedNote> {
+export async function createNote(userId: string, input: CreateNoteInput): Promise<SerializedNote> {
   const { id, ...rest } = input;
-  const values = id !== undefined ? { id, ...rest } : rest;
+  const values = id !== undefined ? { id, userId, ...rest } : { userId, ...rest };
   const [row] = await db.insert(notes).values(values).returning();
   return serialize(row);
 }
 
-export async function updateNote(id: string, input: UpdateNoteInput): Promise<SerializedNote> {
+export async function updateNote(userId: string, id: string, input: UpdateNoteInput): Promise<SerializedNote> {
   const [row] = await db
     .update(notes)
     .set({ ...input, updatedAt: new Date() })
-    .where(eq(notes.id, id))
+    .where(and(eq(notes.id, id), eq(notes.userId, userId)))
     .returning();
   if (!row) throw AppError.notFound("Note");
   return serialize(row);
 }
 
-export async function deleteNote(id: string): Promise<string> {
+export async function deleteNote(userId: string, id: string): Promise<string> {
   const [row] = await db
     .delete(notes)
-    .where(eq(notes.id, id))
+    .where(and(eq(notes.id, id), eq(notes.userId, userId)))
     .returning({ id: notes.id });
   if (!row) throw AppError.notFound("Note");
   return row.id;

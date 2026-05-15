@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { TagColorProvider } from "@/contexts/TagColorContext";
 import { NotesProvider } from "@/contexts/NotesContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ReactNode } from "react";
 
@@ -26,14 +27,16 @@ function InnerProviders({ children }: { children: ReactNode }) {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <SettingsProvider>
-      <TagColorProvider>
-        <NotesProvider>
-          <TooltipProvider delay={400}>
-            <InnerProviders>{children}</InnerProviders>
-          </TooltipProvider>
-        </NotesProvider>
-      </TagColorProvider>
-    </SettingsProvider>
+    <AuthProvider>
+      <SettingsProvider>
+        <TagColorProvider>
+          <NotesProvider>
+            <TooltipProvider delay={400}>
+              <InnerProviders>{children}</InnerProviders>
+            </TooltipProvider>
+          </NotesProvider>
+        </TagColorProvider>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }

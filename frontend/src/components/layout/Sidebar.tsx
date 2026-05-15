@@ -11,8 +11,9 @@ import {
   Settings2,
   PenLine,
   ChevronLeft,
-  ChevronRight,
   Plus,
+  LogOut,
+  ChevronsUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,9 +22,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -93,7 +104,22 @@ function NavLink({
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  const displayName = user?.name ?? "User";
+  const email = user?.email ?? "";
+  const initials = displayName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  async function handleLogout() {
+    await logout();
+    router.push("/login");
+  }
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebar-collapsed");
@@ -262,28 +288,48 @@ export function Sidebar() {
               >
                 <Avatar size="sm">
                   <AvatarFallback className="bg-accent text-[10px] font-semibold text-subtle">
-                    JD
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                <p className="font-medium">John Doe</p>
+                <p className="font-medium">{displayName}</p>
                 <p className="opacity-60">Free plan · click to expand</p>
               </TooltipContent>
             </Tooltip>
           ) : (
-            <button className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-sidebar-accent">
-              <Avatar size="sm" className="shrink-0 border border-border-strong">
-                <AvatarFallback className="bg-accent text-[10px] font-semibold text-subtle">
-                  JD
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="truncate text-[13px] font-medium text-foreground">John Doe</p>
-                <p className="text-[11px] text-muted-foreground">Free plan</p>
-              </div>
-              <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-sidebar-accent group outline-none">
+                <Avatar size="sm" className="shrink-0 border border-border-strong">
+                  <AvatarFallback className="bg-accent text-[10px] font-semibold text-subtle">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
+                  <p className="text-[11px] text-muted-foreground">Free plan</p>
+                </div>
+                <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-52 mb-1">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="text-[13px] font-medium text-foreground truncate">{displayName}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{email}</p>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-[13px] text-destructive focus:text-destructive gap-2 cursor-pointer"
+                  >
+                    <LogOut className="size-3.5" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </aside>

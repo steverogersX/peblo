@@ -1,16 +1,5 @@
 import type { Note } from "@/lib/schemas/note";
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error?.message ?? "Request failed");
-  return json.data as T;
-}
+import { request } from "./client";
 
 type CreatePayload = {
   id?: string;
