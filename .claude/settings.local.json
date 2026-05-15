@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"const l = require\\('lucide-react'\\); console.log\\(!!l.Spellcheck, !!l.LayoutList, !!l.AlignLeft, !!l.Eye, !!l.Globe, !!l.Lock\\)\")",
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\\\\frontend\\\\src\" -Recurse | Where-Object { $_.Extension -eq \".tsx\" } | ForEach-Object { $_.FullName })"
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\\\\frontend\\\\src\" -Recurse | Where-Object { $_.Extension -eq \".tsx\" } | ForEach-Object { $_.FullName })",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(npm install *)",
+      "Bash(Get-ChildItem *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\pavan\\\\peblo\\\\backend\\\\src\\\\\" -Recurse -File -Depth 3 | Where-Object { $_.Extension -in @\\('.ts', '.tsx'\\) } | Select-Object FullName)"
     ]
   }
 }

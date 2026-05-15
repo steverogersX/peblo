@@ -6,10 +6,11 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useRef,
   type ReactNode,
 } from "react";
 import type { Note, UpdateNote } from "@/lib/schemas/note";
-import { MOCK_NOTES } from "@/lib/mock-notes";
+import { notesApi } from "@/lib/api/notes";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,7 +30,9 @@ interface NotesState {
 }
 
 type NotesAction =
+  | { type: "LOAD_START" }
   | { type: "LOAD_SUCCESS"; payload: Note[] }
+  | { type: "LOAD_ERROR" }
   | { type: "SELECT"; payload: string | null }
   | { type: "CREATE"; payload: Note }
   | { type: "UPDATE"; payload: { id: string; changes: UpdateNote } }
@@ -50,14 +53,20 @@ const initialState: NotesState = {
   search: "",
   filterTags: [],
   sortBy: "updatedAt",
-  loadStatus: "idle",
+  loadStatus: "loading",
   saveStatus: "saved",
 };
 
 function notesReducer(state: NotesState, action: NotesAction): NotesState {
   switch (action.type) {
+    case "LOAD_START":
+      return { ...state, loadStatus: "loading" };
+
     case "LOAD_SUCCESS":
       return { ...state, loadStatus: "success", notes: action.payload };
+
+    case "LOAD_ERROR":
+      return { ...state, loadStatus: "error" };
 
     case "SELECT":
       return { ...state, selectedId: action.payload };
@@ -184,13 +193,17 @@ const NotesContext = createContext<NotesContextValue | null>(null);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(notesReducer, initialState);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
-    // Simulate fetch — replace with real API call
-    const timer = setTimeout(() => {
-      dispatch({ type: "LOAD_SUCCESS", payload: MOCK_NOTES });
-    }, 400);
-    return () => clearTimeout(timer);
+    notesApi
+      .list()
+      .then((notes) => dispatch({ type: "LOAD_SUCCESS", payload: notes }))
+      .catch((err) => {
+        console.error("Failed to load notes:", err);
+        dispatch({ type: "LOAD_ERROR" });
+      });
   }, []);
 
   const createNote = useCallback(() => {
@@ -206,18 +219,39 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       updatedAt: now,
     };
     dispatch({ type: "CREATE", payload: note });
+    notesApi
+      .create({
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        tags: note.tags,
+        visibility: note.visibility,
+      })
+      .catch((err) => console.error("Failed to create note:", err));
   }, []);
 
   const updateNote = useCallback((id: string, changes: UpdateNote) => {
     dispatch({ type: "UPDATE", payload: { id, changes } });
+    notesApi
+      .update(id, changes)
+      .catch((err) => console.error("Failed to update note:", err));
   }, []);
 
   const deleteNote = useCallback((id: string) => {
     dispatch({ type: "DELETE", payload: id });
+    notesApi
+      .remove(id)
+      .catch((err) => console.error("Failed to delete note:", err));
   }, []);
 
   const toggleArchive = useCallback((id: string) => {
+    const note = stateRef.current.notes.find((n) => n.id === id);
     dispatch({ type: "TOGGLE_ARCHIVE", payload: id });
+    if (note) {
+      notesApi
+        .update(id, { isArchived: !note.isArchived })
+        .catch((err) => console.error("Failed to archive note:", err));
+    }
   }, []);
 
   const selectNote = useCallback((id: string | null) => {
@@ -242,7 +276,8 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const filteredNotes = selectFilteredNotes(state);
   const allTags = selectAllTags(state.notes);
-  const selectedNote = state.notes.find((n) => n.id === state.selectedId) ?? null;
+  const selectedNote =
+    state.notes.find((n) => n.id === state.selectedId) ?? null;
 
   return (
     <NotesContext.Provider
