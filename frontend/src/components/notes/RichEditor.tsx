@@ -11,9 +11,18 @@ interface RichEditorProps {
   onChange: (markdown: string) => void;
   placeholder?: string;
   className?: string;
+  focusMode?: boolean;
 }
 
-export function RichEditor({ content, onChange, placeholder, className }: RichEditorProps) {
+const COLUMN = "mx-auto w-full max-w-[700px] px-8";
+
+export function RichEditor({
+  content,
+  onChange,
+  placeholder,
+  className,
+  focusMode = false,
+}: RichEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -31,7 +40,6 @@ export function RichEditor({ content, onChange, placeholder, className }: RichEd
     },
   });
 
-  // Sync when a different note is selected
   const contentRef = useRef(content);
   useEffect(() => {
     if (!editor || content === contentRef.current) return;
@@ -47,19 +55,30 @@ export function RichEditor({ content, onChange, placeholder, className }: RichEd
 
   return (
     <div className={cn("flex flex-col overflow-hidden", className)}>
-      {editor && <EditorToolbar editor={editor} />}
 
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <EditorContent editor={editor} />
+      {editor && (
+        <div className="shrink-0 border-b border-border">
+          <div className={cn(focusMode && COLUMN)}>
+            <EditorToolbar editor={editor} />
+          </div>
+        </div>
+      )}
+
+      <div className={cn("flex-1 overflow-y-auto", focusMode ? "px-0 py-8" : "px-8 py-6")}>
+        <div className={cn(focusMode && COLUMN)}>
+          <EditorContent editor={editor} />
+        </div>
       </div>
 
       {editor && (
-        <div className="flex shrink-0 items-center justify-between border-t border-[#2a2a2a] px-6 py-2">
-          <span className="font-mono text-[10px] text-[#444748]">
-            {(editor.storage.characterCount as { words?: () => number } | undefined)?.words?.() ?? 0} words
-            &nbsp;·&nbsp;
-            {(editor.storage.characterCount as { characters?: () => number } | undefined)?.characters?.() ?? 0} chars
-          </span>
+        <div className="shrink-0 border-t border-border py-2">
+          <div className={cn("flex items-center justify-between", focusMode ? COLUMN : "px-6")}>
+            <span className="font-mono text-[10px] text-dim">
+              {(editor.storage.characterCount as { words?: () => number } | undefined)?.words?.() ?? 0} words
+              &nbsp;·&nbsp;
+              {(editor.storage.characterCount as { characters?: () => number } | undefined)?.characters?.() ?? 0} chars
+            </span>
+          </div>
         </div>
       )}
     </div>
