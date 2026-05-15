@@ -2,7 +2,7 @@
 
 import { useRef, useState, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
-import { getTagStyle } from "@/lib/tag-colors";
+import { useTagColors } from "@/contexts/TagColorContext";
 
 interface TagInputProps {
   tags: string[];
@@ -17,6 +17,7 @@ export function TagInput({
   onChange,
   placeholder = "Add tag…",
 }: TagInputProps) {
+  const { getTagStyle } = useTagColors();
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);

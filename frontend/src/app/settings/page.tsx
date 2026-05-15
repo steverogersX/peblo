@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, useEffect, type KeyboardEvent } from "react";
 import {
   Tag, SlidersHorizontal, PenLine, Palette,
-  Plus, X, RotateCcw, User, Sun, Moon,
+  Plus, X, RotateCcw, User, Sun, Moon, ChevronDown, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getTagStyle } from "@/lib/tag-colors";
+import { useTagColors } from "@/contexts/TagColorContext";
+import { TAG_COLOR_NAMES, getTagStyleByIndex } from "@/lib/tag-colors";
 import {
   useSettings,
   DEFAULT_TAGS,
@@ -123,24 +124,122 @@ function SegmentedControl<T extends string>({
   );
 }
 
-/* ── Tag chip ────────────────────────────────────────────────────────── */
+/* ── Plain chip (categories) ─────────────────────────────────────────── */
 
 function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-[13px] font-medium"
-      style={getTagStyle(label)}
-    >
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-accent px-2.5 py-1 text-[13px] font-medium text-foreground/80">
       {label}
       <button
         type="button"
         onClick={onRemove}
-        className="opacity-60 hover:opacity-100 transition-opacity"
+        className="opacity-50 hover:opacity-100 transition-opacity"
         aria-label={`Remove ${label}`}
       >
         <X className="size-3" strokeWidth={2} />
       </button>
     </span>
+  );
+}
+
+/* ── Tag color dropdown ──────────────────────────────────────────────── */
+
+function TagColorDropdown({
+  currentIndex,
+  onSelect,
+  onClose,
+}: {
+  currentIndex: number;
+  onSelect: (idx: number) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-border bg-popover py-1 shadow-md"
+    >
+      {TAG_COLOR_NAMES.map((name, i) => (
+        <button
+          key={i}
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); onSelect(i); }}
+          className="flex w-full items-center gap-2.5 px-3 py-1.5 text-[13px] transition-colors hover:bg-accent"
+        >
+          <span
+            className="size-3 shrink-0 rounded-sm"
+            style={{ backgroundColor: `var(--tag-${i}-bg)`, border: `1px solid var(--tag-${i}-text)` }}
+          />
+          <span className="flex-1 text-left text-foreground/80">{name}</span>
+          {i === currentIndex && (
+            <Check className="size-3 shrink-0 text-foreground/60" strokeWidth={2.5} />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ── Tag row ─────────────────────────────────────────────────────────── */
+
+function TagRow({ label, onRemove }: { label: string; onRemove: () => void }) {
+  const { getTagStyle, getTagColorIndex, setTagColor } = useTagColors();
+  const [open, setOpen] = useState(false);
+  const colorIdx = getTagColorIndex(label);
+  const tagStyle = getTagStyle(label);
+
+  return (
+    <div className="group relative flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/50">
+      <span
+        className="inline-flex min-w-0 max-w-[160px] shrink-0 items-center rounded px-2 py-0.5 text-[12px] font-medium"
+        style={tagStyle}
+      >
+        <span className="truncate">{label}</span>
+      </span>
+
+      <div className="flex flex-1 items-center justify-end gap-1">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="flex items-center gap-1.5 rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <span
+              className="size-2.5 shrink-0 rounded-sm"
+              style={getTagStyleByIndex(colorIdx)}
+            />
+            <span>{TAG_COLOR_NAMES[colorIdx]}</span>
+            <ChevronDown className="size-3 opacity-60" strokeWidth={2} />
+          </button>
+
+          {open && (
+            <TagColorDropdown
+              currentIndex={colorIdx}
+              onSelect={(idx) => { setTagColor(label, idx); setOpen(false); }}
+              onClose={() => setOpen(false)}
+            />
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onRemove}
+          className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
+          aria-label={`Remove ${label}`}
+        >
+          <X className="size-3.5" strokeWidth={2} />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -269,16 +368,16 @@ function TagsCategoriesSection() {
             </button>
           )}
         </div>
-        <div className="px-5 py-4">
-          {settings.tags.length > 0 ? (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {settings.tags.map((tag) => (
-                <Chip key={tag} label={tag} onRemove={() => removeTag(tag)} />
-              ))}
-            </div>
-          ) : (
-            <p className="mb-4 text-[13px] text-muted-foreground">No tags yet.</p>
-          )}
+        {settings.tags.length > 0 ? (
+          <div className="border-b border-border">
+            {settings.tags.map((tag) => (
+              <TagRow key={tag} label={tag} onRemove={() => removeTag(tag)} />
+            ))}
+          </div>
+        ) : (
+          <p className="px-5 py-4 text-[13px] text-muted-foreground">No tags yet.</p>
+        )}
+        <div className="px-4 py-3">
           <AddItemInput
             placeholder="Type a tag and press Enter…"
             onAdd={addTag}

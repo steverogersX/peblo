@@ -1,7 +1,7 @@
 "use client";
 
 import { type Note } from "@/lib/schemas/note";
-import { getTagStyle } from "@/lib/tag-colors";
+import { useTagColors } from "@/contexts/TagColorContext";
 import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
@@ -34,6 +34,7 @@ function stripMarkdown(md: string): string {
 }
 
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
+  const { getTagStyle } = useTagColors();
   const preview = stripMarkdown(note.content).slice(0, 80);
 
   return (

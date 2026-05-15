@@ -59,6 +59,13 @@ src/
       note.ts           # Zod schemas + inferred types for notes
 ```
 
+## UI Rules
+
+- ONLY use shadcn/ui components — never build UI components from scratch
+- ONLY use Tailwind CSS for styling — no custom CSS files
+- ONLY use lucide-react for icons
+- Follow React patterns: custom hooks for logic, composition over prop drilling, co-locate state as low as possible
+
 ## Conventions
 
 ### Server vs Client Components

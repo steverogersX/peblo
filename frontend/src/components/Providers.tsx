@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
+import { TagColorProvider } from "@/contexts/TagColorContext";
 import type { ReactNode } from "react";
 
 function ThemeApplier() {
@@ -24,7 +25,9 @@ function InnerProviders({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <SettingsProvider>
-      <InnerProviders>{children}</InnerProviders>
+      <TagColorProvider>
+        <InnerProviders>{children}</InnerProviders>
+      </TagColorProvider>
     </SettingsProvider>
   );
 }

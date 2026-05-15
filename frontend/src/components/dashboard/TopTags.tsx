@@ -3,10 +3,11 @@
 import { Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboard } from "@/contexts/DashboardContext";
-import { getTagStyle } from "@/lib/tag-colors";
+import { useTagColors } from "@/contexts/TagColorContext";
 
 export function TopTags() {
   const { insights, status } = useDashboard();
+  const { getTagStyle } = useTagColors();
   const loading = status === "loading" || status === "idle";
   const maxCount = insights?.mostUsedTags[0]?.count ?? 1;
 

@@ -62,6 +62,42 @@ export const MOCK_NOTES: Note[] = [
     updatedAt: "2026-05-12T09:00:00Z",
   },
   {
+    id: "note-7",
+    title: "Old Competitor Analysis",
+    content:
+      "## Summary\n\nInitial competitor research from Q1. Superseded by the updated analysis in note-8.\n\n- Notion: richest feature set, complex pricing\n- Bear: great for personal use, no web version\n- Obsidian: power users, steep learning curve\n- Craft: iOS-first, beautiful but limited on web",
+    tags: ["research", "product"],
+    category: "Research",
+    visibility: "private",
+    isArchived: true,
+    createdAt: "2026-03-10T09:00:00Z",
+    updatedAt: "2026-03-18T14:00:00Z",
+  },
+  {
+    id: "note-8",
+    title: "Q1 Goals — Carried Over",
+    content:
+      "## Goals that didn't ship\n\n- Collaborative editing (moved to Q3)\n- Mobile app MVP (deprioritised)\n- Public API (still in design)\n\nArchived after Q1 review. See updated roadmap for current priorities.",
+    tags: ["work"],
+    category: "Work",
+    visibility: "private",
+    isArchived: true,
+    createdAt: "2026-01-02T08:00:00Z",
+    updatedAt: "2026-03-31T17:00:00Z",
+  },
+  {
+    id: "note-9",
+    title: "Draft: Pricing Page Copy",
+    content:
+      "## Early draft\n\nThis was an early brainstorm for the pricing page. Replaced by the version in Figma.\n\n**Free tier:** 50 notes, 5 AI summaries/month\n**Pro:** Unlimited notes, 100 AI summaries, shared workspaces — $8/mo",
+    tags: ["product", "ideas"],
+    category: "Product",
+    visibility: "private",
+    isArchived: true,
+    createdAt: "2026-04-05T11:00:00Z",
+    updatedAt: "2026-04-20T10:00:00Z",
+  },
+  {
     id: "note-6",
     title: "Reading List — Q2 2026",
     content:
