@@ -7,7 +7,7 @@ export const NoteSchema = z.object({
   title: z.string(),
   content: z.string(),
   tags: z.array(z.string()),
-  category: z.string().optional(),
+  category: z.string().nullable().optional(),
   visibility: NoteVisibilitySchema,
   isArchived: z.boolean(),
   aiSummary: z.string().optional(),
