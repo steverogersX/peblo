@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   BarChart3,
@@ -10,6 +10,9 @@ import {
   Archive,
   Settings2,
   PenLine,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -18,17 +21,78 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/notes", label: "Notes", icon: ScrollText },
   { href: "/shared", label: "Shared", icon: Globe },
   { href: "/archive", label: "Archive", icon: Archive },
-  { href: "/settings", label: "Settings", icon: Settings2 },
 ] as const;
+
+function NavLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  collapsed,
+}: {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  active: boolean;
+  collapsed: boolean;
+}) {
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Link
+              href={href}
+              className={cn(
+                "mb-px flex size-8 items-center justify-center rounded-md transition-colors",
+                active
+                  ? "bg-sidebar-accent text-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+              )}
+            />
+          }
+        >
+          <Icon className="size-[17px]" strokeWidth={1.5} />
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "relative flex items-center gap-2 rounded-md px-2 py-[5px] mb-px",
+        "text-[13px] font-medium transition-colors duration-100",
+        active
+          ? "bg-sidebar-accent text-foreground"
+          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+      )}
+    >
+      {active && (
+        <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-blue" />
+      )}
+      <Icon className="size-[17px] shrink-0" strokeWidth={1.5} />
+      {label}
+    </Link>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -44,6 +108,8 @@ export function Sidebar() {
     });
   };
 
+  const settingsActive = pathname.startsWith("/settings");
+
   return (
     <TooltipProvider delay={400}>
       <aside
@@ -58,14 +124,13 @@ export function Sidebar() {
         <div
           className={cn(
             "flex h-[48px] shrink-0 items-center",
-            collapsed ? "justify-center" : "px-3"
+            collapsed ? "justify-center px-1.5" : "justify-between px-3"
           )}
         >
-          <button
-            onClick={toggle}
+          <Link
+            href="/dashboard"
             className={cn(
               "flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-sidebar-accent",
-              "text-foreground",
               collapsed && "size-8 justify-center p-0"
             )}
           >
@@ -77,65 +142,113 @@ export function Sidebar() {
                 Peblo
               </span>
             )}
-          </button>
+          </Link>
+
+          {!collapsed && (
+            <button
+              onClick={toggle}
+              aria-label="Collapse sidebar"
+              className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <ChevronLeft className="size-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* New Note CTA */}
+        <div className={cn("px-2 pb-2", collapsed && "flex justify-center px-1.5")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    onClick={() => router.push("/notes")}
+                    className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+                  />
+                }
+              >
+                <Plus className="size-4" />
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                New note
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/notes")}
+              className="w-full justify-start gap-2 border-sidebar-border bg-transparent text-[13px] font-medium text-muted-foreground shadow-none hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <Plus className="size-3.5" />
+              New note
+            </Button>
+          )}
         </div>
 
         {/* Nav */}
         <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-2 py-1">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, label, icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
-
-            if (collapsed) {
-              return (
-                <Tooltip key={href}>
-                  <TooltipTrigger
-                    render={
-                      <Link
-                        href={href}
-                        className={cn(
-                          "mb-px flex size-8 items-center justify-center rounded-md transition-colors",
-                          active
-                            ? "bg-sidebar-accent text-foreground"
-                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                        )}
-                      />
-                    }
-                  >
-                    <Icon className="size-[17px]" strokeWidth={1.5} />
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={8}>
-                    {label}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
-
             return (
-              <Link
+              <NavLink
                 key={href}
                 href={href}
-                className={cn(
-                  "flex items-center gap-2 rounded-md px-2 py-[5px] mb-px",
-                  "text-[14px] font-medium transition-colors duration-100",
-                  active
-                    ? "bg-sidebar-accent text-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                )}
-              >
-                <Icon className="size-[17px] shrink-0" strokeWidth={1.5} />
-                {label}
-              </Link>
+                label={label}
+                icon={icon}
+                active={active}
+                collapsed={collapsed}
+              />
             );
           })}
         </nav>
 
-        {/* User footer */}
-        <div
-          className={cn(
-            "shrink-0 border-t border-sidebar-border px-2 py-2",
-            collapsed && "flex justify-center"
+        {/* Settings + User footer */}
+        <div className={cn("shrink-0 px-2 pb-2", collapsed && "flex flex-col items-center px-1.5")}>
+          <Separator className="mb-2 bg-sidebar-border" />
+
+          {/* Settings */}
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Link
+                    href="/settings"
+                    className={cn(
+                      "mb-1 flex size-8 items-center justify-center rounded-md transition-colors",
+                      settingsActive
+                        ? "bg-sidebar-accent text-foreground"
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                    )}
+                  />
+                }
+              >
+                <Settings2 className="size-[17px]" strokeWidth={1.5} />
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                Settings
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href="/settings"
+              className={cn(
+                "relative flex items-center gap-2 rounded-md px-2 py-[5px] mb-1",
+                "text-[13px] font-medium transition-colors duration-100",
+                settingsActive
+                  ? "bg-sidebar-accent text-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+              )}
+            >
+              {settingsActive && (
+                <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-blue" />
+              )}
+              <Settings2 className="size-[17px] shrink-0" strokeWidth={1.5} />
+              Settings
+            </Link>
           )}
-        >
+
+          {/* User row */}
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
@@ -143,11 +256,15 @@ export function Sidebar() {
                   <button
                     onClick={toggle}
                     aria-label="Expand sidebar"
-                    className="flex size-7 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-subtle transition-colors hover:bg-border-strong"
+                    className="flex size-8 items-center justify-center rounded-md transition-colors hover:bg-sidebar-accent"
                   />
                 }
               >
-                JD
+                <Avatar size="sm">
+                  <AvatarFallback className="bg-accent text-[10px] font-semibold text-subtle">
+                    JD
+                  </AvatarFallback>
+                </Avatar>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 <p className="font-medium">John Doe</p>
@@ -156,13 +273,16 @@ export function Sidebar() {
             </Tooltip>
           ) : (
             <button className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-sidebar-accent">
-              <div className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border-strong bg-accent text-[10px] font-semibold text-subtle">
-                JD
-              </div>
+              <Avatar size="sm" className="shrink-0 border border-border-strong">
+                <AvatarFallback className="bg-accent text-[10px] font-semibold text-subtle">
+                  JD
+                </AvatarFallback>
+              </Avatar>
               <div className="min-w-0 flex-1 text-left">
                 <p className="truncate text-[13px] font-medium text-foreground">John Doe</p>
                 <p className="text-[11px] text-muted-foreground">Free plan</p>
               </div>
+              <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
             </button>
           )}
         </div>

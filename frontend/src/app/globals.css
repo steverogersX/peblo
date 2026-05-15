@@ -224,8 +224,8 @@
 }
 
 /* ── Tiptap editor content ──────────────────────────────────────────── */
-.tiptap { outline: none; min-height: 420px; }
-.tiptap > * + * { margin-top: 0.6em; }
+.tiptap { outline: none; min-height: 60vh; }
+.tiptap > * + * { margin-top: 0.5em; }
 
 .tiptap p {
   color: var(--foreground);

@@ -1,16 +1,18 @@
 "use client";
 
-import { Search, Plus, SlidersHorizontal, X, Check } from "lucide-react";
+import { Search, Plus, SlidersHorizontal, X, Check, Tag, Layers } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotes, type SortBy } from "@/contexts/NotesContext";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "updatedAt", label: "Last edited" },
@@ -19,13 +21,25 @@ const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 ];
 
 export function NoteList() {
+  const router = useRouter();
   const {
-    filteredNotes, allTags, selectedId,
-    search, filterTags, sortBy, loadStatus,
-    createNote, selectNote, setSearch, toggleFilterTag, setSortBy,
+    filteredNotes, allTags, allCategories, selectedId,
+    search, filterTags, filterCategories, sortBy, loadStatus,
+    createNote, selectNote, setSearch, toggleFilterTag, toggleFilterCategory, setSortBy,
   } = useNotes();
 
+  function handleSelectNote(id: string) {
+    selectNote(id);
+    router.push(`/notes/${id}`);
+  }
+
+  function handleCreateNote() {
+    const id = createNote();
+    router.push(`/notes/${id}`);
+  }
+
   const loading = loadStatus === "idle" || loadStatus === "loading";
+  const activeFilterCount = filterTags.length + filterCategories.length + (sortBy !== "updatedAt" ? 1 : 0);
 
   return (
     <div className="flex h-full w-[240px] shrink-0 flex-col border-r border-border bg-background">
@@ -41,32 +55,147 @@ export function NoteList() {
           )}
         </span>
         <div className="flex items-center gap-0.5">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              title="Sort"
-              className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+
+          {/* Rich filter popover */}
+          <Popover>
+            <PopoverTrigger
+              title="Filter & sort"
+              className={cn(
+                "relative flex size-6 items-center justify-center rounded transition-colors",
+                activeFilterCount > 0
+                  ? "text-[#508eff] hover:bg-accent"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
             >
               <SlidersHorizontal className="size-3.5" strokeWidth={1.5} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-36 border-border bg-popover shadow-lg"
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-[#508eff] text-[8px] font-bold text-white leading-none">
+                  {activeFilterCount}
+                </span>
+              )}
+            </PopoverTrigger>
+            <PopoverContent
+              side="right"
+              align="start"
+              sideOffset={8}
+              className="w-52 p-0 gap-0 border-border bg-popover shadow-xl"
             >
-              {SORT_OPTIONS.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => setSortBy(opt.value)}
-                  className="flex items-center justify-between text-[13px] text-foreground focus:bg-accent"
-                >
-                  <span className={sortBy === opt.value ? "text-blue font-medium" : ""}>{opt.label}</span>
-                  {sortBy === opt.value && <Check className="size-3.5 text-blue" strokeWidth={2.5} />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {/* Popover header */}
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
+                <span className="text-[12px] font-semibold text-foreground tracking-wide uppercase">
+                  Filter & Sort
+                </span>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={() => {
+                      filterTags.forEach((t) => toggleFilterTag(t));
+                      filterCategories.forEach((c) => toggleFilterCategory(c));
+                      setSortBy("updatedAt");
+                    }}
+                    className="text-[11px] text-[#508eff] hover:underline"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              {/* Sort section */}
+              <div className="px-3 pt-2.5 pb-2">
+                <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  <SlidersHorizontal className="size-3" strokeWidth={1.5} />
+                  Sort by
+                </div>
+                <div className="space-y-0.5">
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSortBy(opt.value)}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded px-2 py-1 text-[12px] transition-colors",
+                        sortBy === opt.value
+                          ? "bg-[#508eff]/10 text-[#508eff] font-medium"
+                          : "text-foreground hover:bg-accent"
+                      )}
+                    >
+                      {opt.label}
+                      {sortBy === opt.value && <Check className="size-3" strokeWidth={2.5} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category section */}
+              {allCategories.length > 0 && (
+                <>
+                  <Separator className="bg-border" />
+                  <div className="px-3 pt-2.5 pb-2">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                      <Layers className="size-3" strokeWidth={1.5} />
+                      Category
+                    </div>
+                    <div className="space-y-0.5">
+                      {allCategories.map((cat) => {
+                        const active = filterCategories.includes(cat);
+                        return (
+                          <button
+                            key={cat}
+                            onClick={() => toggleFilterCategory(cat)}
+                            className={cn(
+                              "flex w-full items-center justify-between rounded px-2 py-1 text-[12px] transition-colors",
+                              active
+                                ? "bg-[#508eff]/10 text-[#508eff] font-medium"
+                                : "text-foreground hover:bg-accent"
+                            )}
+                          >
+                            <span className="truncate">{cat}</span>
+                            {active && <Check className="size-3 shrink-0" strokeWidth={2.5} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Tags section */}
+              {allTags.length > 0 && (
+                <>
+                  <Separator className="bg-border" />
+                  <div className="px-3 pt-2.5 pb-3">
+                    <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                      <Tag className="size-3" strokeWidth={1.5} />
+                      Tags
+                    </div>
+                    <ScrollArea className="max-h-[160px]">
+                      <div className="space-y-0.5 pr-1">
+                        {allTags.map((tag) => {
+                          const active = filterTags.includes(tag);
+                          return (
+                            <button
+                              key={tag}
+                              onClick={() => toggleFilterTag(tag)}
+                              className={cn(
+                                "flex w-full items-center justify-between rounded px-2 py-1 text-[12px] transition-colors",
+                                active
+                                  ? "bg-[#508eff]/10 text-[#508eff] font-medium"
+                                  : "text-foreground hover:bg-accent"
+                              )}
+                            >
+                              <span className="truncate">#{tag}</span>
+                              {active && <Check className="size-3 shrink-0" strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </>
+              )}
+            </PopoverContent>
+          </Popover>
 
           <button
-            onClick={createNote}
+            onClick={handleCreateNote}
             title="New note"
             className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
@@ -94,20 +223,27 @@ export function NoteList() {
         </div>
       </div>
 
-      {/* Tag filters */}
-      {allTags.length > 0 && (
+      {/* Active filter chips (collapsed summary) */}
+      {(filterTags.length > 0 || filterCategories.length > 0) && (
         <div className="shrink-0 flex flex-wrap gap-1 px-3 pb-2">
-          {allTags.map((tag) => (
+          {filterCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => toggleFilterCategory(cat)}
+              className="flex items-center gap-0.5 rounded-full bg-[#508eff]/10 px-2 py-0.5 text-[11px] font-medium text-[#508eff] transition-colors hover:bg-[#508eff]/20"
+            >
+              {cat}
+              <X className="size-2.5" strokeWidth={2.5} />
+            </button>
+          ))}
+          {filterTags.map((tag) => (
             <button
               key={tag}
               onClick={() => toggleFilterTag(tag)}
-              className={`rounded-full px-2 py-0.5 text-[11px] transition-colors ${
-                filterTags.includes(tag)
-                  ? "bg-blue/10 text-blue font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
-              }`}
+              className="flex items-center gap-0.5 rounded-full bg-[#508eff]/10 px-2 py-0.5 text-[11px] font-medium text-[#508eff] transition-colors hover:bg-[#508eff]/20"
             >
               #{tag}
+              <X className="size-2.5" strokeWidth={2.5} />
             </button>
           ))}
         </div>
@@ -128,12 +264,12 @@ export function NoteList() {
         ) : filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-12">
             <p className="text-center text-[13px] text-muted-foreground">
-              {search || filterTags.length > 0 ? "No matches" : "No notes yet"}
+              {search || filterTags.length > 0 || filterCategories.length > 0 ? "No matches" : "No notes yet"}
             </p>
-            {!search && filterTags.length === 0 && (
+            {!search && filterTags.length === 0 && filterCategories.length === 0 && (
               <button
-                onClick={createNote}
-                className="text-[13px] text-blue hover:underline"
+                onClick={handleCreateNote}
+                className="text-[13px] text-[#508eff] hover:underline"
               >
                 Create first note
               </button>
@@ -145,7 +281,7 @@ export function NoteList() {
               key={note.id}
               note={note}
               selected={note.id === selectedId}
-              onClick={() => selectNote(note.id)}
+              onClick={() => handleSelectNote(note.id)}
             />
           ))
         )}

@@ -26,6 +26,8 @@ export const AIUsageSchema = z.object({
 export const ProductivityInsightsSchema = z.object({
   totalNotes: z.number().int().nonnegative(),
   archivedNotes: z.number().int().nonnegative(),
+  notesThisWeek: z.number().int().nonnegative(),
+  wordsWritten: z.number().int().nonnegative(),
   recentlyEditedNotes: z.array(RecentNoteSchema),
   mostUsedTags: z.array(TagCountSchema),
   aiUsage: AIUsageSchema,

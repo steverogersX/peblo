@@ -36,6 +36,9 @@ function stripMarkdown(md: string): string {
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const { getTagStyle } = useTagColors();
   const preview = stripMarkdown(note.content).slice(0, 80);
+  const maxTags = note.category ? 2 : 3;
+  const visibleTags = note.tags.slice(0, maxTags);
+  const overflow = note.tags.length - visibleTags.length;
 
   return (
     <button
@@ -46,40 +49,58 @@ export function NoteCard({ note, selected, onClick }: NoteCardProps) {
         selected ? "bg-accent" : "hover:bg-accent/60"
       )}
     >
+      {/* Title */}
       <p className={cn(
-        "truncate text-[14px] font-medium leading-snug",
-        selected ? "text-foreground" : "text-foreground/80"
+        "truncate text-[13.5px] font-medium leading-snug",
+        selected ? "text-foreground" : "text-foreground/90"
       )}>
         {note.title || "Untitled"}
       </p>
 
+      {/* Preview */}
       {preview && (
-        <p className="mt-0.5 line-clamp-1 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-muted-foreground/70">
           {preview}
         </p>
       )}
 
-      {(note.tags.length > 0 || true) && (
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <div className="flex min-w-0 gap-1 overflow-hidden">
-            {note.tags.slice(0, 3).map((t) => (
-              <span
-                key={t}
-                className="inline-block rounded px-1.5 py-px text-[11px] font-medium leading-normal"
-                style={getTagStyle(t)}
-              >
-                {t}
+      {/* Metadata row */}
+      <div className="mt-1.5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1 overflow-hidden">
+          {/* Category as plain text */}
+          {note.category && (
+            <>
+              <span className="shrink-0 truncate text-[11px] text-muted-foreground/50">
+                {note.category}
               </span>
-            ))}
-            {note.tags.length > 3 && (
-              <span className="text-[11px] text-muted-foreground">+{note.tags.length - 3}</span>
-            )}
-          </div>
-          <span className="shrink-0 text-[11px] text-muted-foreground/70">
-            {timeAgo(note.updatedAt)}
-          </span>
+              {visibleTags.length > 0 && (
+                <span className="shrink-0 text-[11px] text-muted-foreground/25">·</span>
+              )}
+            </>
+          )}
+
+          {/* Tags as small colored chips */}
+          {visibleTags.map((t) => (
+            <span
+              key={t}
+              className="shrink-0 rounded px-1.5 py-px text-[10.5px] font-medium leading-normal"
+              style={getTagStyle(t)}
+            >
+              {t}
+            </span>
+          ))}
+
+          {overflow > 0 && (
+            <span className="shrink-0 text-[11px] text-muted-foreground/40">
+              +{overflow}
+            </span>
+          )}
         </div>
-      )}
+
+        <span className="shrink-0 text-[11px] text-muted-foreground/40">
+          {timeAgo(note.updatedAt)}
+        </span>
+      </div>
     </button>
   );
 }

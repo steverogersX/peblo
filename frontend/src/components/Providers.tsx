@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { TagColorProvider } from "@/contexts/TagColorContext";
 import { NotesProvider } from "@/contexts/NotesContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ReactNode } from "react";
 
 function ThemeApplier() {
@@ -28,7 +29,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <SettingsProvider>
       <TagColorProvider>
         <NotesProvider>
-          <InnerProviders>{children}</InnerProviders>
+          <TooltipProvider delay={400}>
+            <InnerProviders>{children}</InnerProviders>
+          </TooltipProvider>
         </NotesProvider>
       </TagColorProvider>
     </SettingsProvider>

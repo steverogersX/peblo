@@ -21,6 +21,7 @@ interface NotesState {
   selectedId: string | null;
   search: string;
   filterTags: string[];
+  filterCategories: string[];
   sortBy: SortBy;
   loadStatus: "idle" | "loading" | "success" | "error";
   saveStatus: SaveStatus;
@@ -37,6 +38,7 @@ type NotesAction =
   | { type: "TOGGLE_ARCHIVE"; payload: string }
   | { type: "SET_SEARCH"; payload: string }
   | { type: "TOGGLE_FILTER_TAG"; payload: string }
+  | { type: "TOGGLE_FILTER_CATEGORY"; payload: string }
   | { type: "SET_SORT"; payload: SortBy }
   | { type: "SET_SAVE_STATUS"; payload: SaveStatus };
 
@@ -46,6 +48,7 @@ const initialState: NotesState = {
   selectedId: null,
   search: "",
   filterTags: [],
+  filterCategories: [],
   sortBy: "updatedAt",
   loadStatus: "loading",
   saveStatus: "saved",
@@ -114,6 +117,14 @@ function notesReducer(state: NotesState, action: NotesAction): NotesState {
           : [...state.filterTags, action.payload],
       };
 
+    case "TOGGLE_FILTER_CATEGORY":
+      return {
+        ...state,
+        filterCategories: state.filterCategories.includes(action.payload)
+          ? state.filterCategories.filter((c) => c !== action.payload)
+          : [...state.filterCategories, action.payload],
+      };
+
     case "SET_SORT":
       return { ...state, sortBy: action.payload };
 
@@ -145,6 +156,12 @@ function selectFilteredNotes(state: NotesState): Note[] {
     );
   }
 
+  if (state.filterCategories.length > 0) {
+    notes = notes.filter((n) =>
+      n.category != null && state.filterCategories.includes(n.category)
+    );
+  }
+
   return [...notes].sort((a, b) => {
     if (state.sortBy === "title") return a.title.localeCompare(b.title);
     return (
@@ -157,18 +174,24 @@ function selectAllTags(notes: Note[]): string[] {
   return [...new Set(notes.flatMap((n) => n.tags))].sort();
 }
 
+function selectAllCategories(notes: Note[]): string[] {
+  return [...new Set(notes.map((n) => n.category).filter((c): c is string => c != null))].sort();
+}
+
 
 interface NotesContextValue extends NotesState {
   filteredNotes: Note[];
   allTags: string[];
+  allCategories: string[];
   selectedNote: Note | null;
-  createNote: () => void;
+  createNote: () => string;
   updateNote: (id: string, changes: UpdateNote) => void;
   deleteNote: (id: string) => void;
   toggleArchive: (id: string) => void;
   selectNote: (id: string | null) => void;
   setSearch: (q: string) => void;
   toggleFilterTag: (tag: string) => void;
+  toggleFilterCategory: (category: string) => void;
   setSortBy: (sort: SortBy) => void;
   setSaveStatus: (s: SaveStatus) => void;
 }
@@ -191,7 +214,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const createNote = useCallback(() => {
+  const createNote = useCallback((): string => {
     const now = new Date().toISOString();
     const note: Note = {
       id: crypto.randomUUID(),
@@ -213,6 +236,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         visibility: note.visibility,
       })
       .catch((err) => console.error("Failed to create note:", err));
+    return note.id;
   }, []);
 
   const updateNote = useCallback((id: string, changes: UpdateNote) => {
@@ -251,6 +275,10 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "TOGGLE_FILTER_TAG", payload: tag });
   }, []);
 
+  const toggleFilterCategory = useCallback((category: string) => {
+    dispatch({ type: "TOGGLE_FILTER_CATEGORY", payload: category });
+  }, []);
+
   const setSortBy = useCallback((sort: SortBy) => {
     dispatch({ type: "SET_SORT", payload: sort });
   }, []);
@@ -261,6 +289,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const filteredNotes = selectFilteredNotes(state);
   const allTags = selectAllTags(state.notes);
+  const allCategories = selectAllCategories(state.notes);
   const selectedNote =
     state.notes.find((n) => n.id === state.selectedId) ?? null;
 
@@ -270,6 +299,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         ...state,
         filteredNotes,
         allTags,
+        allCategories,
         selectedNote,
         createNote,
         updateNote,
@@ -278,6 +308,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         selectNote,
         setSearch,
         toggleFilterTag,
+        toggleFilterCategory,
         setSortBy,
         setSaveStatus,
       }}
