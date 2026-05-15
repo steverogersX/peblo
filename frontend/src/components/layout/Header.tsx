@@ -3,7 +3,6 @@
 import { RotateCcw } from "lucide-react";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface HeaderProps {
   title: string;
@@ -33,12 +32,6 @@ export function Header({ title }: HeaderProps) {
         >
           <RotateCcw className={`size-3.5 ${loading ? "animate-spin" : ""}`} strokeWidth={1.5} />
         </Button>
-
-        <Avatar size="sm">
-          <AvatarFallback className="text-[11px] font-semibold bg-accent text-subtle">
-            JD
-          </AvatarFallback>
-        </Avatar>
       </div>
     </header>
   );

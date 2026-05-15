@@ -7,23 +7,29 @@ import { PenLine, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
-  }
-
-  function handleGoogle() {
-    setLoading(true);
-    setTimeout(() => router.push("/dashboard"), 600);
+    try {
+      await login(email, password);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -46,13 +52,12 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="rounded-xl border border-border bg-card px-8 py-7 shadow-sm">
-          {/* Google */}
+          {/* Google (UI only) */}
           <Button
             variant="outline"
             className="w-full h-9 gap-2.5 text-[14px] font-medium"
             type="button"
-            onClick={handleGoogle}
-            disabled={loading}
+            disabled
           >
             <GoogleIcon />
             Continue with Google
@@ -67,6 +72,12 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-[13px] text-destructive">
+                {error}
+              </p>
+            )}
+
             <div className="space-y-1.5">
               <label className="block text-[13px] font-medium text-foreground/80">
                 Email

@@ -30,7 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 
 const SAVE_DELAY = 700;
-const CONTENT_MAX = "mx-auto w-full max-w-[720px]";
+const CONTENT_MAX = "mx-auto w-full max-w-[1020px]";
 
 interface NoteEditorProps {
   focusMode?: boolean;

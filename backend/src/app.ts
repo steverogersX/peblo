@@ -1,7 +1,9 @@
 import express, { type Request, type Response } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import httpStatus from "http-status";
 import notesRouter from "./routes/notes";
+import authRouter from "./routes/auth";
 import { ApiError } from "./lib/AppError";
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -11,10 +13,13 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
     methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true,
   })
 );
 app.use(express.json());
+app.use(cookieParser());
 
+app.use("/api/auth", authRouter);
 app.use("/api/notes", notesRouter);
 
 app.get("/health", (_req: Request, res: Response) => {
