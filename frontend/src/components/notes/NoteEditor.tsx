@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Archive, Trash2, Globe, Lock,
-  MoreHorizontal, Check, Loader2, RotateCcw,
+  MoreHorizontal, Loader2, RotateCcw,
   Maximize2, Minimize2, ArrowLeft,
+  Tag, FolderOpen,
 } from "lucide-react";
 import { RichEditor } from "@/components/notes/RichEditor";
 import { TagInput } from "@/components/notes/TagInput";
@@ -26,26 +27,10 @@ interface NoteEditorProps {
   onToggleFocus?: () => void;
 }
 
-function SaveBadge({ status }: { status: string }) {
-  return (
-    <span className="flex items-center gap-1.5 text-[11px] text-dim">
-      {status === "saving" ? (
-        <><Loader2 className="size-3 animate-spin" strokeWidth={1.5} />Saving…</>
-      ) : (
-        <><Check className="size-3 text-blue" strokeWidth={2} />Saved</>
-      )}
-    </span>
-  );
-}
-
 export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps) {
   const {
-    selectedNote,
-    updateNote,
-    deleteNote,
-    toggleArchive,
-    setSaveStatus,
-    saveStatus,
+    selectedNote, updateNote, deleteNote, toggleArchive,
+    setSaveStatus, saveStatus,
   } = useNotes();
   const { settings } = useSettings();
 
@@ -100,10 +85,8 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
   if (!selectedNote) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-background">
-        <div className="flex size-12 items-center justify-center rounded-xl border border-border bg-card">
-          <RotateCcw className="size-5 text-dim" strokeWidth={1.5} />
-        </div>
-        <p className="text-[13px] text-dim">Select a note or create one</p>
+        <RotateCcw className="size-8 text-muted-foreground" strokeWidth={1} />
+        <p className="text-[14px] text-muted-foreground">Select a note to start editing</p>
       </div>
     );
   }
@@ -111,31 +94,39 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-background">
 
-      {/* ── Top bar ─────────────────────────────────── */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-2.5">
-
-        {/* Left side */}
+      {/* Top bar */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-2">
         {focusMode ? (
           <button
             onClick={onToggleFocus}
-            className="flex items-center gap-1.5 rounded px-2 py-1 text-[11px] text-dim transition-colors hover:bg-card hover:text-muted-foreground"
+            className="flex items-center gap-1.5 rounded px-2 py-1 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" strokeWidth={1.5} />
-            <span>Notes</span>
+            Notes
           </button>
         ) : (
-          <SaveBadge status={saveStatus} />
+          <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+            {saveStatus === "saving"
+              ? <><Loader2 className="size-3 animate-spin" strokeWidth={1.5} />Saving…</>
+              : <span className="text-muted-foreground/60">Saved</span>
+            }
+          </span>
         )}
 
-        {/* Right side */}
-        <div className="flex items-center gap-1">
-          {focusMode && <SaveBadge status={saveStatus} />}
+        <div className="flex items-center gap-0.5">
+          {focusMode && (
+            <span className="mr-2 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              {saveStatus === "saving"
+                ? <><Loader2 className="size-3 animate-spin" strokeWidth={1.5} />Saving…</>
+                : <span className="text-muted-foreground/60">Saved</span>
+              }
+            </span>
+          )}
 
-          {/* Focus mode toggle */}
           <button
             onClick={onToggleFocus}
             title={focusMode ? "Exit focus mode (Esc)" : "Focus mode"}
-            className="flex size-7 items-center justify-center rounded border border-transparent text-dim transition-colors hover:border-border hover:bg-card hover:text-muted-foreground"
+            className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             {focusMode
               ? <Minimize2 className="size-3.5" strokeWidth={1.5} />
@@ -143,14 +134,13 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
             }
           </button>
 
-          {/* Visibility */}
           <button
             onClick={() =>
               updateNote(selectedNote.id, {
                 visibility: selectedNote.visibility === "private" ? "public" : "private",
               })
             }
-            className="flex items-center gap-1.5 rounded border border-transparent px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-border hover:bg-card"
+            className="flex items-center gap-1.5 rounded px-2 py-1 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             {selectedNote.visibility === "public"
               ? <Globe className="size-3.5" strokeWidth={1.5} />
@@ -158,28 +148,29 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
             <span className="capitalize">{selectedNote.visibility}</span>
           </button>
 
-          {/* More */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="flex size-7 items-center justify-center rounded border border-transparent text-dim transition-colors hover:border-border hover:bg-card hover:text-muted-foreground"
+              className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <MoreHorizontal className="size-4" strokeWidth={1.5} />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-8 z-30 w-44 rounded-lg border border-border bg-card py-1 shadow-2xl shadow-black/20">
+              <div className="absolute right-0 top-8 z-30 w-44 rounded-lg border border-border bg-popover py-1 shadow-lg">
                 <button
                   onClick={() => { toggleArchive(selectedNote.id); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-subtle"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-foreground transition-colors hover:bg-accent"
                 >
-                  <Archive className="size-3.5" strokeWidth={1.5} />Archive
+                  <Archive className="size-3.5 text-muted-foreground" strokeWidth={1.5} />
+                  Archive
                 </button>
                 <div className="mx-2 my-0.5 h-px bg-border" />
                 <button
                   onClick={() => { deleteNote(selectedNote.id); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[12px] text-destructive transition-colors hover:bg-accent"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[13px] text-destructive transition-colors hover:bg-accent"
                 >
-                  <Trash2 className="size-3.5" strokeWidth={1.5} />Delete
+                  <Trash2 className="size-3.5" strokeWidth={1.5} />
+                  Delete
                 </button>
               </div>
             )}
@@ -187,17 +178,17 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
         </div>
       </div>
 
-      {/* ── Scrollable body ──────────────────────────── */}
+      {/* Scrollable body */}
       <div className="flex flex-1 flex-col overflow-hidden">
 
-        {/* Title + meta */}
-        <div
-          className={cn(
-            "shrink-0 border-b border-border transition-[padding] duration-200",
-            focusMode ? "pt-10 pb-6 px-0" : "px-8 pt-7 pb-5"
-          )}
-        >
-          <div className={cn(focusMode && "mx-auto w-full max-w-[700px] px-8")}>
+        {/* Title + properties */}
+        <div className={cn(
+          "shrink-0 overflow-y-auto",
+          focusMode ? "px-0 pt-16 pb-0" : "px-12 pt-10 pb-0"
+        )}>
+          <div className={cn(focusMode && "mx-auto w-full max-w-[720px] px-12")}>
+
+            {/* Title */}
             <textarea
               ref={titleRef}
               value={title}
@@ -215,41 +206,53 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
               placeholder="Untitled"
               rows={1}
               className={cn(
-                "w-full resize-none overflow-hidden bg-transparent font-semibold leading-snug tracking-[-0.035em] text-foreground outline-none placeholder:text-border-strong transition-[font-size] duration-200",
-                focusMode ? "text-[28px]" : "text-[22px]"
+                "w-full resize-none overflow-hidden bg-transparent font-bold leading-tight tracking-[-0.03em] text-foreground outline-none",
+                "placeholder:text-muted-foreground/30 transition-[font-size] duration-200",
+                focusMode ? "text-[42px]" : "text-[36px]"
               )}
             />
 
-            {/* Meta */}
-            <div className="mt-4 flex flex-wrap items-start gap-6">
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-dim">Tags</span>
-                <TagInput
-                  tags={selectedNote.tags}
-                  suggestions={settings.tags}
-                  onChange={(tags) => updateNote(selectedNote.id, { tags })}
-                />
+            {/* Properties */}
+            <div className="mt-6 space-y-1">
+              <div className="flex items-start gap-3 group">
+                <span className="flex w-28 shrink-0 items-center gap-1.5 py-0.5 text-[13px] text-muted-foreground">
+                  <Tag className="size-3.5" strokeWidth={1.5} />
+                  Tags
+                </span>
+                <div className="flex-1 py-0.5">
+                  <TagInput
+                    tags={selectedNote.tags}
+                    suggestions={settings.tags}
+                    onChange={(tags) => updateNote(selectedNote.id, { tags })}
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-dim">Category</span>
+
+              <div className="flex items-center gap-3">
+                <span className="flex w-28 shrink-0 items-center gap-1.5 text-[13px] text-muted-foreground">
+                  <FolderOpen className="size-3.5" strokeWidth={1.5} />
+                  Category
+                </span>
                 <Select
                   value={selectedNote.category ?? "none"}
                   onValueChange={(val) =>
                     updateNote(selectedNote.id, { category: val === "none" ? undefined : val || undefined })
                   }
                 >
-                  <SelectTrigger className="h-auto w-auto min-w-[88px] rounded border border-border bg-card px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-border-strong focus-visible:border-blue focus-visible:ring-0 focus-visible:ring-offset-0">
-                    <SelectValue />
+                  <SelectTrigger className="h-auto w-auto min-w-[100px] rounded border-0 bg-transparent px-2 py-1 text-[13px] text-foreground shadow-none transition-colors hover:bg-accent focus-visible:ring-0 focus-visible:ring-offset-0 data-[placeholder]:text-muted-foreground">
+                    <SelectValue placeholder="None" />
                   </SelectTrigger>
-                  <SelectContent className="border border-border bg-card text-muted-foreground shadow-xl shadow-black/10 ring-0">
-                    <SelectItem value="none" className="text-[12px] focus:bg-accent focus:text-subtle">None</SelectItem>
+                  <SelectContent className="border border-border bg-popover shadow-lg ring-0">
+                    <SelectItem value="none" className="text-[13px] focus:bg-accent">None</SelectItem>
                     {settings.categories.map((c) => (
-                      <SelectItem key={c} value={c} className="text-[12px] focus:bg-accent focus:text-subtle">{c}</SelectItem>
+                      <SelectItem key={c} value={c} className="text-[13px] focus:bg-accent">{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+
+            <div className="mt-6 border-t border-border" />
           </div>
         </div>
 
@@ -258,7 +261,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
           key={selectedNote.id}
           content={selectedNote.content}
           onChange={handleContentChange}
-          placeholder="Start writing… (supports Markdown)"
+          placeholder="Start writing…"
           className="flex-1 overflow-hidden"
           focusMode={focusMode}
         />

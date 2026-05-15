@@ -1,6 +1,7 @@
 "use client";
 
 import { type Note } from "@/lib/schemas/note";
+import { getTagStyle } from "@/lib/tag-colors";
 import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
@@ -33,54 +34,51 @@ function stripMarkdown(md: string): string {
 }
 
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
-  const preview = stripMarkdown(note.content).slice(0, 90);
+  const preview = stripMarkdown(note.content).slice(0, 80);
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "relative w-full border-b border-[#2a2a2a] px-4 py-3.5 text-left transition-colors last:border-b-0",
-        selected ? "bg-[#1c1b1b]" : "bg-transparent hover:bg-[#1a1919]"
+        "mx-1 mb-px w-[calc(100%-8px)] rounded-md px-3 py-2.5 text-left",
+        selected ? "bg-accent" : "hover:bg-accent/60"
       )}
     >
-      {selected && (
-        <span className="absolute left-0 top-0 h-full w-[2px] rounded-r-sm bg-[#508eff]" />
-      )}
-
       <p className={cn(
-        "truncate text-[13px] font-medium leading-snug",
-        selected ? "text-[#e5e2e1]" : "text-[#c4c7c8]"
+        "truncate text-[14px] font-medium leading-snug",
+        selected ? "text-foreground" : "text-foreground/80"
       )}>
         {note.title || "Untitled"}
       </p>
 
       {preview && (
-        <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[#444748]">
+        <p className="mt-0.5 line-clamp-1 text-[13px] leading-relaxed text-muted-foreground">
           {preview}
         </p>
       )}
 
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 gap-1 overflow-hidden">
-          {note.tags.slice(0, 2).map((t) => (
-            <span
-              key={t}
-              className="rounded border border-[#2a2a2a] bg-[#201f1f] px-1.5 py-px font-mono text-[9.5px] text-[#444748]"
-            >
-              {t}
-            </span>
-          ))}
-          {note.tags.length > 2 && (
-            <span className="font-mono text-[9.5px] text-[#444748]">
-              +{note.tags.length - 2}
-            </span>
-          )}
+      {(note.tags.length > 0 || true) && (
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 gap-1 overflow-hidden">
+            {note.tags.slice(0, 3).map((t) => (
+              <span
+                key={t}
+                className="inline-block rounded px-1.5 py-px text-[11px] font-medium leading-normal"
+                style={getTagStyle(t)}
+              >
+                {t}
+              </span>
+            ))}
+            {note.tags.length > 3 && (
+              <span className="text-[11px] text-muted-foreground">+{note.tags.length - 3}</span>
+            )}
+          </div>
+          <span className="shrink-0 text-[11px] text-muted-foreground/70">
+            {timeAgo(note.updatedAt)}
+          </span>
         </div>
-        <span className="shrink-0 font-mono text-[10px] text-[#444748]">
-          {timeAgo(note.updatedAt)}
-        </span>
-      </div>
+      )}
     </button>
   );
 }

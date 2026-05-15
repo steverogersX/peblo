@@ -22,6 +22,7 @@ export type EditorFontSize = "sm" | "md" | "lg";
 export type NoteListDensity = "compact" | "normal";
 export type DefaultVisibility = "private" | "public";
 export type DefaultSort = "updatedAt" | "createdAt" | "title";
+export type Theme = "dark" | "light";
 
 export interface AppSettings {
   tags: string[];
@@ -32,6 +33,7 @@ export interface AppSettings {
   editorFontSize: EditorFontSize;
   showWordCount: boolean;
   noteListDensity: NoteListDensity;
+  theme: Theme;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   editorFontSize: "md",
   showWordCount: false,
   noteListDensity: "normal",
+  theme: "dark",
 };
 
 const STORAGE_KEY = "peblo:settings";

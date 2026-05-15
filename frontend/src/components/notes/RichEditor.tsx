@@ -14,7 +14,7 @@ interface RichEditorProps {
   focusMode?: boolean;
 }
 
-const COLUMN = "mx-auto w-full max-w-[700px] px-8";
+const COLUMN = "mx-auto w-full max-w-[720px] px-12";
 
 export function RichEditor({
   content,
@@ -64,21 +64,22 @@ export function RichEditor({
         </div>
       )}
 
-      <div className={cn("flex-1 overflow-y-auto", focusMode ? "px-0 py-8" : "px-8 py-6")}>
+      <div className={cn(
+        "flex-1 overflow-y-auto",
+        focusMode ? "px-0 py-8" : "px-12 py-6"
+      )}>
         <div className={cn(focusMode && COLUMN)}>
           <EditorContent editor={editor} />
         </div>
       </div>
 
       {editor && (
-        <div className="shrink-0 border-t border-border py-2">
-          <div className={cn("flex items-center justify-between", focusMode ? COLUMN : "px-6")}>
-            <span className="font-mono text-[10px] text-dim">
-              {(editor.storage.characterCount as { words?: () => number } | undefined)?.words?.() ?? 0} words
-              &nbsp;·&nbsp;
-              {(editor.storage.characterCount as { characters?: () => number } | undefined)?.characters?.() ?? 0} chars
-            </span>
-          </div>
+        <div className="shrink-0 border-t border-border px-12 py-2">
+          <span className="text-[11px] text-muted-foreground">
+            {(editor.storage.characterCount as { words?: () => number } | undefined)?.words?.() ?? 0} words
+            {" · "}
+            {(editor.storage.characterCount as { characters?: () => number } | undefined)?.characters?.() ?? 0} chars
+          </span>
         </div>
       )}
     </div>

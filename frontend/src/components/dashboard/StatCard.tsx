@@ -23,11 +23,10 @@ export function StatCard({
 }: StatCardProps) {
   if (loading) {
     return (
-      <div className={cn("rounded-xl border border-[#2a2a2a] bg-[#1c1b1b] p-5", className)}>
-        <Skeleton className="mb-4 size-8 rounded-lg" />
-        <Skeleton className="mb-1.5 h-7 w-14" />
-        <Skeleton className="h-3.5 w-20" />
-        <Skeleton className="mt-1 h-3 w-28" />
+      <div className={cn("rounded-lg border border-border bg-card p-5", className)}>
+        <Skeleton className="mb-4 h-3.5 w-24" />
+        <Skeleton className="h-8 w-14" />
+        <Skeleton className="mt-1.5 h-3 w-32" />
       </div>
     );
   }
@@ -35,20 +34,20 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-[#2a2a2a] bg-[#1c1b1b] p-5 transition-colors hover:border-[#353434] hover:bg-[#201f1f]",
+        "rounded-lg border border-border bg-card p-5 transition-colors hover:bg-card-hover",
         className
       )}
     >
-      <div className="mb-4 flex size-8 items-center justify-center rounded-lg border border-[#353434] bg-[#2a2a2a]">
-        <Icon className="size-4 text-[#8e9192]" strokeWidth={1.5} />
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] font-medium text-muted-foreground">{title}</p>
+        <Icon className="size-4 text-muted-foreground/50" strokeWidth={1.5} />
       </div>
 
-      <p className="text-2xl font-semibold tracking-[-0.03em] text-[#e5e2e1] tabular-nums">
+      <p className="mt-3 text-[30px] font-bold tracking-[-0.04em] text-foreground tabular-nums leading-none">
         {value}
       </p>
-      <p className="mt-0.5 text-[13px] font-medium text-[#c4c7c8]">{title}</p>
       {description && (
-        <p className="mt-1 text-[11px] text-[#8e9192]">{description}</p>
+        <p className="mt-1.5 text-[12px] text-muted-foreground">{description}</p>
       )}
     </div>
   );
