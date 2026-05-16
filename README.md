@@ -1,6 +1,6 @@
 # Peblo Notes — Collaborative AI Notes Workspace
 
-A full-stack, AI-powered notes application built for the Peblo take-home challenge. Create and manage notes with a rich-text editor, organise them with tags and categories, generate AI summaries and action items via Mistral, search and filter instantly, share notes publicly with granular permissions, and track your productivity on a live dashboard.
+A full-stack, AI-powered notes application. Create and manage notes with a rich-text editor, organise them with tags and categories, generate AI summaries and action items via Mistral, search and filter instantly, share notes publicly with granular permissions, and track your productivity on a live dashboard.
 
 ---
 
