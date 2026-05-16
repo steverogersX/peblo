@@ -14,11 +14,19 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+const FONT_SIZE_CLASS: Record<"sm" | "md" | "lg", string> = {
+  sm: "text-[14px]",
+  md: "text-[15px]",
+  lg: "text-[17px]",
+};
+
 interface RichEditorProps {
   content: string;
   onChange: (markdown: string) => void;
   placeholder?: string;
   className?: string;
+  spellCheck?: boolean;
+  fontSize?: "sm" | "md" | "lg";
 }
 
 // ── Toolbar button (shadcn Button + Tooltip) ──────────────────────────────
@@ -183,7 +191,7 @@ function FloatingToolbar({ editor }: { editor: ReturnType<typeof useEditor> | nu
 }
 
 // ── Main RichEditor ───────────────────────────────────────────────────────
-export function RichEditor({ content, onChange, placeholder, className }: RichEditorProps) {
+export function RichEditor({ content, onChange, placeholder, className, spellCheck = false, fontSize = "md" }: RichEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -192,7 +200,10 @@ export function RichEditor({ content, onChange, placeholder, className }: RichEd
     extensions: buildExtensions(placeholder),
     content,
     editorProps: {
-      attributes: { class: "tiptap focus:outline-none" },
+      attributes: {
+        class: "tiptap focus:outline-none",
+        spellcheck: spellCheck ? "true" : "false",
+      },
     },
     onUpdate({ editor }) {
       // @ts-expect-error tiptap-markdown storage
@@ -215,8 +226,21 @@ export function RichEditor({ content, onChange, placeholder, className }: RichEd
     });
   }, [editor, content]);
 
+  // Reactively update spellcheck when the setting changes
+  useEffect(() => {
+    if (!editor) return;
+    editor.setOptions({
+      editorProps: {
+        attributes: {
+          class: "tiptap focus:outline-none",
+          spellcheck: spellCheck ? "true" : "false",
+        },
+      },
+    });
+  }, [editor, spellCheck]);
+
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative", FONT_SIZE_CLASS[fontSize], className)}>
       <FloatingToolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>

@@ -34,6 +34,16 @@ import { cn } from "@/lib/utils";
 const SAVE_DELAY = 700;
 const CONTENT_MAX = "mx-auto w-full max-w-[900px]";
 
+function countWords(markdown: string): number {
+  return markdown
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]+`/g, "")
+    .replace(/[#*_~[\]()>]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
+}
+
 interface NoteEditorProps {
   focusMode?: boolean;
   onToggleFocus?: () => void;
@@ -108,7 +118,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = f
   const pad = focusMode ? "px-20" : "px-14";
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+    <div className="relative flex flex-1 flex-col overflow-hidden bg-background">
 
       {/* ── Notion-style ghost top bar ── */}
       <div className="group/topbar flex shrink-0 items-center justify-between px-3.5 py-2">
@@ -355,9 +365,20 @@ export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = f
             content={selectedNote.content}
             onChange={handleContentChange}
             placeholder="Start writing…"
+            spellCheck={settings.editorSpellCheck}
+            fontSize={settings.editorFontSize}
           />
         </div>
       </div>
+
+      {/* ── Word count ── */}
+      {settings.showWordCount && (
+        <div className="pointer-events-none absolute bottom-4 right-6 select-none">
+          <span className="rounded-md bg-background/80 px-2 py-1 text-[11px] tabular-nums text-muted-foreground/40 backdrop-blur-sm">
+            {countWords(selectedNote.content).toLocaleString()} words
+          </span>
+        </div>
+      )}
     </div>
   );
 }

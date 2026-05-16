@@ -2,6 +2,7 @@
 
 import { type Note } from "@/lib/schemas/note";
 import { useTagColors } from "@/contexts/TagColorContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 
 interface NoteCardProps {
@@ -38,15 +39,18 @@ function stripMarkdown(md: string): string {
 
 export function NoteCard({ note, selected, onClick }: NoteCardProps) {
   const { getTagStyle } = useTagColors();
+  const { settings } = useSettings();
   const preview = stripMarkdown(note.content).slice(0, 120);
   const hasMeta = note.category || note.tags.length > 0;
+  const py = settings.noteListDensity === "compact" ? "py-1.5" : "py-2.5";
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group w-full rounded-md px-3 py-2.5 text-left transition-colors duration-100",
+        "group w-full rounded-md px-3 text-left transition-colors duration-100",
+        py,
         selected
           ? "bg-sidebar-accent"
           : "hover:bg-sidebar-accent/50"

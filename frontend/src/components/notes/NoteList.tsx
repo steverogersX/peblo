@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotes, type SortBy } from "@/contexts/NotesContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import {
   Popover,
   PopoverContent,
@@ -29,8 +30,15 @@ export function NoteList() {
     hasMore, isFetchingMore,
     createNote, selectNote, setSearch, toggleFilterTag, toggleFilterCategory, setSortBy, loadMore,
   } = useNotes();
+  const { settings } = useSettings();
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Apply the saved default sort on first mount
+  useEffect(() => {
+    setSortBy(settings.defaultSort);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -49,7 +57,7 @@ export function NoteList() {
   }
 
   function handleCreateNote() {
-    const id = createNote();
+    const id = createNote({ visibility: settings.defaultVisibility });
     router.push(`/notes/${id}`);
   }
 

@@ -213,7 +213,7 @@ interface NotesContextValue extends NotesState {
   allTags: string[];
   allCategories: string[];
   selectedNote: Note | null;
-  createNote: () => string;
+  createNote: (opts?: { visibility?: "private" | "public" }) => string;
   updateNote: (id: string, changes: UpdateNote) => void;
   patchNote: (id: string, patch: Partial<Note>) => void;
   deleteNote: (id: string) => void;
@@ -264,14 +264,14 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
-  const createNote = useCallback((): string => {
+  const createNote = useCallback((opts?: { visibility?: "private" | "public" }): string => {
     const now = new Date().toISOString();
     const note: Note = {
       id: crypto.randomUUID(),
       title: "",
       content: "",
       tags: [],
-      visibility: "private",
+      visibility: opts?.visibility ?? "private",
       isArchived: false,
       shareLinkPermission: "none",
       createdAt: now,

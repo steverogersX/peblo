@@ -70,10 +70,8 @@ function TagsCell({ tags }: { tags: string[] }) {
 
       {overflow.length > 0 && (
         <Popover>
-          <PopoverTrigger asChild>
-            <button className="inline-flex items-center rounded px-1.5 py-px text-[11px] font-medium text-muted-foreground bg-accent hover:bg-muted transition-colors leading-normal cursor-pointer">
-              +{overflow.length}
-            </button>
+          <PopoverTrigger className="inline-flex items-center rounded px-1.5 py-px text-[11px] font-medium text-muted-foreground bg-accent hover:bg-muted transition-colors leading-normal cursor-pointer">
+            +{overflow.length}
           </PopoverTrigger>
           <PopoverContent
             side="top"
