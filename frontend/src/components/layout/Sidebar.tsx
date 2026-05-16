@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   BarChart3,
   ScrollText,
@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotes } from "@/contexts/NotesContext";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -88,7 +89,17 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+  const { createNote } = useNotes();
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const stored = localStorage.getItem("sidebar-collapsed");
+    return stored !== null ? stored === "true" : false;
+  });
+
+  function handleNewNote() {
+    const id = createNote();
+    router.push(`/notes/${id}`);
+  }
 
   const displayName = user?.name ?? "User";
   const email = user?.email ?? "";
@@ -104,11 +115,6 @@ export function Sidebar() {
     router.push("/login");
   }
 
-  useEffect(() => {
-    const stored = localStorage.getItem("sidebar-collapsed");
-    if (stored !== null) setCollapsed(stored === "true");
-  }, []);
-
   const toggle = () => {
     setCollapsed((prev) => {
       const next = !prev;
@@ -116,8 +122,6 @@ export function Sidebar() {
       return next;
     });
   };
-
-  const settingsActive = pathname.startsWith("/settings");
 
   return (
     <TooltipProvider delay={400}>
@@ -181,7 +185,7 @@ export function Sidebar() {
               <TooltipTrigger
                 render={
                   <button
-                    onClick={() => router.push("/notes")}
+                    onClick={handleNewNote}
                     className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
                   />
                 }
@@ -192,7 +196,7 @@ export function Sidebar() {
             </Tooltip>
           ) : (
             <button
-              onClick={() => router.push("/notes")}
+              onClick={handleNewNote}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-md px-2 py-[5px]",
                 "text-[13px] text-muted-foreground transition-colors duration-100",
@@ -234,42 +238,6 @@ export function Sidebar() {
             collapsed && "flex flex-col items-center px-1.5"
           )}
         >
-          {/* Settings */}
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Link
-                    href="/settings"
-                    className={cn(
-                      "mb-1 flex size-8 items-center justify-center rounded-md transition-colors",
-                      settingsActive
-                        ? "bg-sidebar-accent text-foreground"
-                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                    )}
-                  />
-                }
-              >
-                <Settings2 className="size-[17px]" strokeWidth={1.5} />
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>Settings</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link
-              href="/settings"
-              className={cn(
-                "mb-1 flex items-center gap-2.5 rounded-md px-2 py-[5px]",
-                "text-[13px] transition-colors duration-100",
-                settingsActive
-                  ? "bg-sidebar-accent text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground/90"
-              )}
-            >
-              <Settings2 className="size-[17px] shrink-0" strokeWidth={1.5} />
-              Settings
-            </Link>
-          )}
-
           {/* User row */}
           {collapsed ? (
             <Tooltip>
@@ -312,6 +280,16 @@ export function Sidebar() {
                     <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
                     <p className="truncate text-[11px] text-muted-foreground">{email}</p>
                   </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/settings")}
+                    className="cursor-pointer gap-2 text-[13px]"
+                  >
+                    <Settings2 className="size-3.5" />
+                    Settings
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>

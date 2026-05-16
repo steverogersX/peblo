@@ -6,11 +6,13 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   type ReactNode,
 } from "react";
 import type { Note, UpdateNote } from "@/lib/schemas/note";
 import { notesApi } from "@/lib/api/notes";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type SaveStatus = "saved" | "saving" | "unsaved";
 export type SortBy = "updatedAt" | "createdAt" | "title";
@@ -212,7 +214,7 @@ interface NotesContextValue extends NotesState {
   allTags: string[];
   allCategories: string[];
   selectedNote: Note | null;
-  createNote: () => string;
+  createNote: (opts?: { visibility?: "private" | "public" }) => string;
   updateNote: (id: string, changes: UpdateNote) => void;
   patchNote: (id: string, patch: Partial<Note>) => void;
   deleteNote: (id: string) => void;
@@ -229,11 +231,18 @@ interface NotesContextValue extends NotesState {
 const NotesContext = createContext<NotesContextValue | null>(null);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
   const [state, dispatch] = useReducer(notesReducer, initialState);
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useLayoutEffect(() => { stateRef.current = state; });
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      dispatch({ type: "LOAD_SUCCESS", payload: { notes: [], nextCursor: null, hasMore: false } });
+      return;
+    }
+    dispatch({ type: "LOAD_START" });
     notesApi
       .list()
       .then((result) => dispatch({ type: "LOAD_SUCCESS", payload: result }))
@@ -241,7 +250,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         console.error("Failed to load notes:", err);
         dispatch({ type: "LOAD_ERROR" });
       });
-  }, []);
+  }, [user?.id, authLoading]);
 
   const loadMore = useCallback(() => {
     const { cursor, hasMore, isFetchingMore } = stateRef.current;
@@ -252,18 +261,18 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       .then((result) => dispatch({ type: "LOAD_MORE_SUCCESS", payload: result }))
       .catch((err) => {
         console.error("Failed to load more notes:", err);
-        dispatch({ type: "LOAD_MORE_START" }); // reset isFetchingMore
+        dispatch({ type: "LOAD_MORE_SUCCESS", payload: { notes: [], nextCursor: stateRef.current.cursor, hasMore: stateRef.current.hasMore } });
       });
   }, []);
 
-  const createNote = useCallback((): string => {
+  const createNote = useCallback((opts?: { visibility?: "private" | "public" }): string => {
     const now = new Date().toISOString();
     const note: Note = {
       id: crypto.randomUUID(),
       title: "",
       content: "",
       tags: [],
-      visibility: "private",
+      visibility: opts?.visibility ?? "private",
       isArchived: false,
       shareLinkPermission: "none",
       createdAt: now,
@@ -278,7 +287,10 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const updateNote = useCallback((id: string, changes: UpdateNote) => {
     dispatch({ type: "UPDATE", payload: { id, changes } });
-    notesApi.update(id, changes).catch((err) => console.error("Failed to update note:", err));
+    notesApi
+      .update(id, changes)
+      .then((updated) => dispatch({ type: "PATCH", payload: { id, patch: updated } }))
+      .catch((err) => console.error("Failed to update note:", err));
   }, []);
 
   const patchNote = useCallback((id: string, patch: Partial<Note>) => {

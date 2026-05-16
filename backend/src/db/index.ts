@@ -1,13 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
+import { env } from "../config/env";
 
-if (!process.env.DATABASE_URL) {
-  console.error("[db] DATABASE_URL is not set. Exiting.");
-  process.exit(1);
-}
-
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ connectionString: env.DATABASE_URL });
 
 pool.on("error", (err) => {
   console.error("[db] Unexpected pool error:", err.message);

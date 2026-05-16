@@ -12,7 +12,9 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@ai-sdk/mistral": "^3.0.37",
     "@peblo/shared": "workspace:*",
+    "ai": "^6.0.183",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

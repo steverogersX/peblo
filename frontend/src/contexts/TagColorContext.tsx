@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -23,14 +22,15 @@ const TagColorContext = createContext<TagColorContextValue | null>(null);
 const STORAGE_KEY = "peblo-tag-colors";
 
 export function TagColorProvider({ children }: { children: ReactNode }) {
-  const [colorMap, setColorMap] = useState<TagColorMap>({});
-
-  useEffect(() => {
+  const [colorMap, setColorMap] = useState<TagColorMap>(() => {
+    if (typeof window === "undefined") return {};
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setColorMap(JSON.parse(stored));
-    } catch {}
-  }, []);
+      return stored ? (JSON.parse(stored) as TagColorMap) : {};
+    } catch {
+      return {};
+    }
+  });
 
   const setTagColor = useCallback((tag: string, colorIndex: number) => {
     setColorMap((prev) => {

@@ -25,4 +25,7 @@ export const authApi = {
 
   me: () =>
     request<{ user: AuthUser }>("/api/auth/me"),
+
+  deleteAccount: () =>
+    request<unknown>("/api/auth/account", { method: "DELETE" }),
 };

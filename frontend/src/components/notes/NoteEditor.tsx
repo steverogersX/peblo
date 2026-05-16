@@ -6,8 +6,18 @@ import {
   MoreHorizontal, Loader2, FileText,
   Maximize2, Minimize2, ArrowLeft,
   Tag, FolderOpen, ChevronRight,
-  CalendarDays,
+  CalendarDays, Sparkles,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { RichEditor } from "@/components/notes/RichEditor";
 import { TagInput } from "@/components/notes/TagInput";
 import { NoteSharePopover } from "@/components/notes/NoteSharePopover";
@@ -34,9 +44,21 @@ import { cn } from "@/lib/utils";
 const SAVE_DELAY = 700;
 const CONTENT_MAX = "mx-auto w-full max-w-[900px]";
 
+function countWords(markdown: string): number {
+  return markdown
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]+`/g, "")
+    .replace(/[#*_~[\]()>]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .length;
+}
+
 interface NoteEditorProps {
   focusMode?: boolean;
   onToggleFocus?: () => void;
+  showAISidebar?: boolean;
+  onToggleAISidebar?: () => void;
 }
 
 function formatDate(iso: string) {
@@ -45,7 +67,7 @@ function formatDate(iso: string) {
   });
 }
 
-export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps) {
+export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = false, onToggleAISidebar }: NoteEditorProps) {
   const {
     selectedNote, updateNote, deleteNote, toggleArchive,
     setSaveStatus, saveStatus, selectNote,
@@ -53,12 +75,14 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
   const { settings } = useSettings();
 
   const [title, setTitle] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (selectedNote) setTitle(selectedNote.title);
-  }, [selectedNote?.id]); // eslint-disable-line
+  }, [selectedNote?.id, selectedNote?.title]); // eslint-disable-line
 
   useEffect(() => {
     if (selectedNote && !selectedNote.title && !selectedNote.content) {
@@ -106,7 +130,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
   const pad = focusMode ? "px-20" : "px-14";
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background">
+    <div className="relative flex flex-1 flex-col overflow-hidden bg-background">
 
       {/* ── Notion-style ghost top bar ── */}
       <div className="group/topbar flex shrink-0 items-center justify-between px-3.5 py-2">
@@ -163,6 +187,25 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
             )}
           </span>
 
+          {/* AI sidebar toggle */}
+          {onToggleAISidebar && (
+            <Tooltip>
+              <TooltipTrigger
+                onClick={onToggleAISidebar}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                  "text-foreground hover:text-foreground/70 transition-colors duration-150",
+                  showAISidebar && "text-[#508eff] hover:text-[#508eff]/80"
+                )}
+              >
+                <Sparkles className="size-3.5" strokeWidth={1.5} />
+              </TooltipTrigger>
+              <TooltipContent className="text-[12px]">
+                {showAISidebar ? "Close AI insights" : "AI insights"}
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           {/* Focus toggle */}
           <Tooltip>
             <TooltipTrigger
@@ -201,7 +244,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => deleteNote(selectedNote.id)}
+                onClick={() => setShowDeleteDialog(true)}
                 variant="destructive"
                 className="gap-2 text-[13px]"
               >
@@ -287,26 +330,16 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
               </div>
             </div>
 
-            {/* Visibility */}
-            <div className="group/prop flex min-h-[32px] items-center rounded-md transition-colors duration-100 hover:bg-accent/25">
+            {/* Visibility — read-only, derived from share state */}
+            <div className="flex min-h-[32px] items-center">
               <div className="flex w-[140px] shrink-0 items-center gap-2 px-2 py-[7px] text-[12.5px] font-medium text-muted-foreground/40 select-none">
-                {selectedNote.visibility === "public"
+                {selectedNote.shareLinkPermission !== "none"
                   ? <Globe className="size-3.5 shrink-0" strokeWidth={1.5} />
                   : <Lock className="size-3.5 shrink-0" strokeWidth={1.5} />}
                 Visibility
               </div>
-              <div className="flex-1 px-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateNote(selectedNote.id, {
-                      visibility: selectedNote.visibility === "private" ? "public" : "private",
-                    })
-                  }
-                  className="rounded px-1 py-[5px] text-[13px] capitalize text-foreground/55 transition-colors hover:bg-accent/50 hover:text-foreground/80"
-                >
-                  {selectedNote.visibility ?? "private"}
-                </button>
+              <div className="flex-1 px-2 py-[7px] text-[13px] text-muted-foreground/35 select-none capitalize">
+                {selectedNote.shareLinkPermission !== "none" ? "public" : "private"}
               </div>
             </div>
 
@@ -334,9 +367,41 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
             content={selectedNote.content}
             onChange={handleContentChange}
             placeholder="Start writing…"
+            spellCheck={settings.editorSpellCheck}
+            fontSize={settings.editorFontSize}
           />
         </div>
       </div>
+
+      {/* ── Word count ── */}
+      {settings.showWordCount && (
+        <div className="pointer-events-none absolute bottom-4 right-6 select-none">
+          <span className="rounded-md bg-background/80 px-2 py-1 text-[11px] tabular-nums text-muted-foreground/40 backdrop-blur-sm">
+            {countWords(selectedNote.content).toLocaleString()} words
+          </span>
+        </div>
+      )}
+
+      {/* ── Delete confirmation ── */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{title || "Untitled"}&rdquo; will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteNote(selectedNote.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,9 +1,13 @@
 import { randomUUID } from "crypto";
 import { and, eq, or, lt, desc, isNotNull } from "drizzle-orm";
+import { generateObject } from "ai";
+import { createMistral } from "@ai-sdk/mistral";
+import { z } from "zod";
 import { db } from "../db";
 import { notes, users, type NoteRow } from "../db/schema";
 import type { CreateNoteInput, UpdateNoteInput } from "../lib/schemas";
 import { AppError } from "../lib/AppError";
+import { env } from "../config/env";
 
 export type SerializedNote = {
   id: string;
@@ -108,6 +112,11 @@ export async function createNote(userId: string, input: CreateNoteInput): Promis
 export async function updateNote(userId: string, id: string, input: UpdateNoteInput): Promise<SerializedNote> {
   const patch: Record<string, unknown> = { ...input, updatedAt: new Date() };
 
+  // Derive visibility from share state
+  if (input.shareLinkPermission !== undefined) {
+    patch.visibility = input.shareLinkPermission !== "none" ? "public" : "private";
+  }
+
   // Lazily generate a share token the first time sharing is enabled
   if (input.shareLinkPermission && input.shareLinkPermission !== "none") {
     const [existing] = await db
@@ -171,15 +180,17 @@ export async function deleteNote(userId: string, id: string): Promise<string> {
   return row.id;
 }
 
-export async function summarizeNote(userId: string, noteId: string): Promise<SerializedNote> {
+export type SummarizeResult = {
+  note: SerializedNote;
+  suggestedTitle: string;
+};
+
+export async function summarizeNote(userId: string, noteId: string): Promise<SummarizeResult> {
   const [row] = await db
     .select()
     .from(notes)
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)));
   if (!row) throw AppError.notFound("Note");
-
-  // Simulated processing delay
-  await new Promise((r) => setTimeout(r, 1200));
 
   const plain = (row.content || "")
     .replace(/```[\s\S]*?```/g, "")
@@ -187,18 +198,7 @@ export async function summarizeNote(userId: string, noteId: string): Promise<Ser
     .replace(/\s+/g, " ")
     .trim();
 
-  const words = plain.split(" ").filter(Boolean);
-  let aiSummary: string;
-
-  if (words.length === 0) {
-    aiSummary = "This note is currently empty. Add some content and regenerate for a meaningful summary.";
-  } else {
-    const excerpt = words.slice(0, 80).join(" ");
-    const prefix = row.title ? `"${row.title}" covers ` : "This note covers ";
-    aiSummary = prefix + excerpt + (words.length > 80 ? "…" : "");
-  }
-
-  const aiActionItems = extractActionItems(plain);
+  const { summary: aiSummary, actionItems: aiActionItems, suggestedTitle } = await callAI(row.title, plain);
 
   const [updated] = await db
     .update(notes)
@@ -206,18 +206,41 @@ export async function summarizeNote(userId: string, noteId: string): Promise<Ser
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning();
 
-  return serialize(updated);
+  return { note: serialize(updated), suggestedTitle };
 }
 
-function extractActionItems(text: string): string[] {
-  const pattern = /\b(need to|should|must|todo|follow.?up|review|check|send|create|update|fix|implement|schedule|prepare|call|email|draft|complete)\b/i;
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  const items: string[] = [];
-  for (const s of sentences) {
-    const clean = s.trim();
-    if (pattern.test(clean) && clean.length > 10 && clean.length < 180) {
-      items.push(clean);
+type NoteAnalysis = { summary: string; actionItems: string[]; suggestedTitle: string };
+const noteSchema: z.ZodType<NoteAnalysis> = z.object({
+  summary: z.string().describe("A detailed summary of the note between 500 and 1000 characters. Cover the main points, context, and key details. Write 'The note is empty.' if there is no content."),
+  actionItems: z.array(z.string()).max(5).describe("Up to 5 actionable tasks found in the note. Empty array if none."),
+  suggestedTitle: z.string().describe("The current title if already clear and accurate, otherwise a concise improvement."),
+});
+
+async function callAI(title: string, plainContent: string): Promise<NoteAnalysis> {
+  const mistral = createMistral({ apiKey: env.MISTRAL_API_KEY });
+  const model = env.MISTRAL_MODEL;
+  const snippet = plainContent.slice(0, 12000);
+
+  try {
+    // @ts-expect-error TS2589: ai SDK v6 generic depth exceeds TypeScript's limit
+    const { object } = await generateObject({
+      model: mistral(model),
+      schema: noteSchema,
+      prompt: `Analyze the following note.
+
+Note title: ${JSON.stringify(title || "(untitled)")}
+Note content: ${JSON.stringify(snippet || "(empty)")}`,
+      temperature: 0.3,
+      abortSignal: AbortSignal.timeout(8000),
+    });
+    return object;
+  } catch (err: unknown) {
+    if (err instanceof DOMException && err.name === "TimeoutError") {
+      throw new AppError("AI service timed out. Please try again.", 504);
     }
+    const status = (err as { status?: number }).status;
+    if (status === 429) throw new AppError("AI rate limit reached. Please wait a moment and try again.", 429);
+    if (status === 401 || status === 403) throw new AppError("AI service access denied. Check MISTRAL_API_KEY in .env.", 403);
+    throw new AppError("AI generation failed. Please try again.", 500);
   }
-  return items.slice(0, 5);
 }

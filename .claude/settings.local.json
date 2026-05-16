@@ -43,7 +43,8 @@
       "Bash(Select-Object -First 30)",
       "Bash(npx drizzle-kit *)",
       "PowerShell(Stop-Process *)",
-      "Bash(yes \"\")"
+      "Bash(yes \"\")",
+      "PowerShell($key = \"AIzaSyBZIgvhs_gCzmZ_tl9_k4lSeRWDt7VCfOs\"; $r = Invoke-RestMethod \"https://generativelanguage.googleapis.com/v1beta/models?key=$key\"; $r.models | Where-Object { $_.name -match \"flash|pro\" } | Select-Object -ExpandProperty name | ForEach-Object { $_ -replace \"models/\", \"\" })"
     ]
   }
 }
