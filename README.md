@@ -2,12 +2,15 @@
 
 A full-stack, AI-powered notes application. Create and manage notes with a rich-text editor, organise them with tags and categories, generate AI summaries and action items via Mistral, search and filter instantly, share notes publicly with granular permissions, and track your productivity on a live dashboard.
 
-**Demo video:** [https://www.youtube.com/watch?v=txOsm7-NQ4A](https://www.youtube.com/watch?v=txOsm7-NQ4A)
+## Demo
+
+[![Watch the demo](https://img.youtube.com/vi/txOsm7-NQ4A/maxresdefault.jpg)](https://www.youtube.com/watch?v=txOsm7-NQ4A)
 
 ---
 
 ## Table of Contents
 
+- [Demo](#demo)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
