@@ -87,13 +87,18 @@ export default function NoteDetailPage() {
         onToggleAISidebar={() => setShowAISidebar((v) => !v)}
       />
 
-      {/* AI Sidebar — desktop: resizable panel */}
-      {aiSidebarOpen && (
+      {/* AI Sidebar — desktop: always in DOM so width transition always plays */}
+      <div
+        className="hidden md:flex shrink-0 h-full overflow-hidden"
+        style={{
+          width: aiSidebarOpen ? aiWidth : 0,
+          transition: "width 300ms ease-in-out",
+        }}
+      >
         <div
-          className="hidden md:flex shrink-0 h-full border-l border-border/40"
-          style={{ width: aiWidth }}
+          className="flex h-full border-l border-border/40"
+          style={{ width: aiWidth, minWidth: aiWidth }}
         >
-          {/* Drag handle */}
           <div
             onMouseDown={startResize}
             className="w-1 shrink-0 cursor-col-resize group relative"
@@ -101,35 +106,51 @@ export default function NoteDetailPage() {
           >
             <div className="absolute inset-y-0 left-0 w-px bg-border/40 group-hover:bg-[#508eff]/40 transition-colors duration-150" />
           </div>
+          <div className="flex-1 overflow-hidden min-w-0">
+            {selectedNote && (
+              <NoteAISidebar
+                note={selectedNote}
+                onClose={() => setShowAISidebar(false)}
+                onSummaryGenerated={(patch) => patchNote(selectedNote.id, patch)}
+                onApplyTitle={(title) => updateNote(selectedNote.id, { title })}
+              />
+            )}
+          </div>
+        </div>
+      </div>
 
-          <div className="flex-1 overflow-hidden">
+      {/* AI Sidebar — mobile: always in DOM so transform transition always plays */}
+      <div
+        className={cn(
+          "md:hidden fixed inset-0 z-50 flex justify-end",
+          aiSidebarOpen ? "pointer-events-auto" : "pointer-events-none"
+        )}
+      >
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+          style={{
+            opacity: aiSidebarOpen ? 1 : 0,
+            transition: "opacity 300ms ease-in-out",
+          }}
+          onClick={() => setShowAISidebar(false)}
+        />
+        <div
+          className="relative h-full w-80 max-w-[85vw] bg-background shadow-2xl"
+          style={{
+            transform: aiSidebarOpen ? "translateX(0)" : "translateX(100%)",
+            transition: "transform 300ms ease-in-out",
+          }}
+        >
+          {selectedNote && (
             <NoteAISidebar
               note={selectedNote}
               onClose={() => setShowAISidebar(false)}
               onSummaryGenerated={(patch) => patchNote(selectedNote.id, patch)}
               onApplyTitle={(title) => updateNote(selectedNote.id, { title })}
             />
-          </div>
+          )}
         </div>
-      )}
-
-      {/* AI Sidebar — mobile: slide-over overlay */}
-      {aiSidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex justify-end">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
-            onClick={() => setShowAISidebar(false)}
-          />
-          <div className="relative h-full w-80 max-w-[85vw] bg-background shadow-2xl">
-            <NoteAISidebar
-              note={selectedNote}
-              onClose={() => setShowAISidebar(false)}
-              onSummaryGenerated={(patch) => patchNote(selectedNote.id, patch)}
-              onApplyTitle={(title) => updateNote(selectedNote.id, { title })}
-            />
-          </div>
-        </div>
-      )}
+      </div>
     </>
   );
 }

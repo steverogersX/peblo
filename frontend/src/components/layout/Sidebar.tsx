@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotes } from "@/contexts/NotesContext";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -88,7 +89,13 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { createNote } = useNotes();
   const [collapsed, setCollapsed] = useState(false);
+
+  function handleNewNote() {
+    const id = createNote();
+    router.push(`/notes/${id}`);
+  }
 
   const displayName = user?.name ?? "User";
   const email = user?.email ?? "";
@@ -179,7 +186,7 @@ export function Sidebar() {
               <TooltipTrigger
                 render={
                   <button
-                    onClick={() => router.push("/notes")}
+                    onClick={handleNewNote}
                     className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
                   />
                 }
@@ -190,7 +197,7 @@ export function Sidebar() {
             </Tooltip>
           ) : (
             <button
-              onClick={() => router.push("/notes")}
+              onClick={handleNewNote}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-md px-2 py-[5px]",
                 "text-[13px] text-muted-foreground transition-colors duration-100",

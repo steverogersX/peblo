@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Globe, Link2, Check, MoreHorizontal,
-  FileText, ArrowUpRight, EyeOff,
+  FileText, ArrowUpRight, Eye, Pencil, Ban, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotes } from "@/contexts/NotesContext";
 import { useTagColors } from "@/contexts/TagColorContext";
 import type { Note } from "@/lib/schemas/note";
+import type { ShareLinkPermission } from "@peblo/shared";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,63 @@ import {
   Table, TableBody, TableCell,
   TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+
+/* ── Permission metadata ─────────────────────────────────────────────── */
+
+const PERM_META: Record<ShareLinkPermission, { label: string; Icon: React.ElementType; desc: string }> = {
+  none: { label: "No access", Icon: Ban,    desc: "Link sharing disabled" },
+  view: { label: "View only", Icon: Eye,    desc: "Anyone with the link can view" },
+  edit: { label: "Can edit",  Icon: Pencil, desc: "Anyone with the link can edit" },
+};
+
+/* ── Inline permission picker ────────────────────────────────────────── */
+
+function AccessPicker({
+  value,
+  onChange,
+}: {
+  value: ShareLinkPermission;
+  onChange: (v: ShareLinkPermission) => void;
+}) {
+  const { Icon, label } = PERM_META[value];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[12px] font-medium transition-colors",
+            "hover:bg-accent/60 focus-visible:outline-none",
+            value === "none"
+              ? "border-border text-muted-foreground bg-transparent"
+              : "border-border text-muted-foreground bg-transparent"
+          )}
+        >
+          <Icon className="size-3 shrink-0" strokeWidth={1.5} />
+          {label}
+          <ChevronDown className="size-2.5 opacity-40" strokeWidth={2} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" sideOffset={4} className="w-[148px] p-1">
+        {(["view", "edit", "none"] as ShareLinkPermission[]).map((opt) => {
+          const { label: optLabel, Icon: OptIcon } = PERM_META[opt];
+          return (
+            <DropdownMenuItem
+              key={opt}
+              onClick={() => onChange(opt)}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px]"
+            >
+              <OptIcon className="size-3.5 shrink-0 text-muted-foreground/60" strokeWidth={1.5} />
+              <span className="flex-1">{optLabel}</span>
+              {value === opt && <Check className="size-3 text-blue" strokeWidth={2.5} />}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
@@ -67,17 +125,12 @@ function TagsCell({ tags }: { tags: string[] }) {
   return (
     <div className="flex items-center gap-1 flex-wrap">
       {visible.map((t) => <TagPill key={t} tag={t} />)}
-
       {overflow.length > 0 && (
         <Popover>
           <PopoverTrigger className="inline-flex items-center rounded px-1.5 py-px text-[11px] font-medium text-muted-foreground bg-accent hover:bg-muted transition-colors leading-normal cursor-pointer">
             +{overflow.length}
           </PopoverTrigger>
-          <PopoverContent
-            side="top"
-            align="start"
-            className="w-auto max-w-56 p-2"
-          >
+          <PopoverContent side="top" align="start" className="w-auto max-w-56 p-2">
             <div className="flex flex-wrap gap-1">
               {overflow.map((t) => <TagPill key={t} tag={t} />)}
             </div>
@@ -90,7 +143,13 @@ function TagsCell({ tags }: { tags: string[] }) {
 
 /* ── Table row ───────────────────────────────────────────────────────── */
 
-function SharedNoteRow({ note, onStopSharing }: { note: Note; onStopSharing: (id: string) => void }) {
+function SharedNoteRow({
+  note,
+  onChangePermission,
+}: {
+  note: Note;
+  onChangePermission: (id: string, perm: ShareLinkPermission) => void;
+}) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
 
@@ -119,15 +178,12 @@ function SharedNoteRow({ note, onStopSharing }: { note: Note; onStopSharing: (id
         </button>
       </TableCell>
 
-      {/* Access */}
+      {/* Access — inline picker */}
       <TableCell className="w-36 px-3 py-3.5">
-        <Badge
-          variant="secondary"
-          className="gap-1.5 text-[12px] font-normal text-muted-foreground bg-transparent border border-border"
-        >
-          <Globe className="size-3 shrink-0" strokeWidth={1.5} />
-          {note.shareLinkPermission === "edit" ? "Can edit" : "View only"}
-        </Badge>
+        <AccessPicker
+          value={note.shareLinkPermission ?? "none"}
+          onChange={(perm) => onChangePermission(note.id, perm)}
+        />
       </TableCell>
 
       {/* Tags */}
@@ -178,9 +234,9 @@ function SharedNoteRow({ note, onStopSharing }: { note: Note; onStopSharing: (id
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2.5 text-[13px] text-destructive focus:text-destructive"
-                onClick={() => onStopSharing(note.id)}
+                onClick={() => onChangePermission(note.id, "none")}
               >
-                <EyeOff className="size-3.5" strokeWidth={1.5} />
+                <Ban className="size-3.5" strokeWidth={1.5} />
                 Stop sharing
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -205,7 +261,7 @@ function LoadingRows() {
             <Skeleton className="h-3.5 w-48" />
           </TableCell>
           <TableCell className="w-36 px-3">
-            <Skeleton className="h-5 w-24 rounded-full" />
+            <Skeleton className="h-6 w-24 rounded-md" />
           </TableCell>
           <TableCell className="w-48 px-3 hidden sm:table-cell">
             <div className="flex gap-1">
@@ -258,8 +314,8 @@ export default function SharedPage() {
   const loading = loadStatus === "idle" || loadStatus === "loading";
   const publicNotes = notes.filter((n) => n.shareLinkPermission !== "none" && !n.isArchived);
 
-  function stopSharing(id: string) {
-    updateNote(id, { shareLinkPermission: "none" });
+  function handleChangePermission(id: string, perm: ShareLinkPermission) {
+    updateNote(id, { shareLinkPermission: perm });
   }
 
   return (
@@ -278,7 +334,7 @@ export default function SharedPage() {
           )}
         </div>
         <p className="text-[13px] text-muted-foreground">
-          Notes you&apos;ve made public — anyone with the link can access them.
+          Notes you&apos;ve made public — change access or copy the link anytime.
         </p>
       </div>
 
@@ -304,7 +360,11 @@ export default function SharedPage() {
             </TableHeader>
             <TableBody>
               {publicNotes.map((note) => (
-                <SharedNoteRow key={note.id} note={note} onStopSharing={stopSharing} />
+                <SharedNoteRow
+                  key={note.id}
+                  note={note}
+                  onChangePermission={handleChangePermission}
+                />
               ))}
             </TableBody>
           </Table>

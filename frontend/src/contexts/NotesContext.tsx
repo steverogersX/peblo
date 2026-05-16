@@ -260,7 +260,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       .then((result) => dispatch({ type: "LOAD_MORE_SUCCESS", payload: result }))
       .catch((err) => {
         console.error("Failed to load more notes:", err);
-        dispatch({ type: "LOAD_MORE_START" }); // reset isFetchingMore
+        dispatch({ type: "LOAD_MORE_SUCCESS", payload: { notes: [], nextCursor: stateRef.current.cursor, hasMore: stateRef.current.hasMore } });
       });
   }, []);
 
@@ -286,7 +286,10 @@ export function NotesProvider({ children }: { children: ReactNode }) {
 
   const updateNote = useCallback((id: string, changes: UpdateNote) => {
     dispatch({ type: "UPDATE", payload: { id, changes } });
-    notesApi.update(id, changes).catch((err) => console.error("Failed to update note:", err));
+    notesApi
+      .update(id, changes)
+      .then((updated) => dispatch({ type: "PATCH", payload: { id, patch: updated } }))
+      .catch((err) => console.error("Failed to update note:", err));
   }, []);
 
   const patchNote = useCallback((id: string, patch: Partial<Note>) => {

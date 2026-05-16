@@ -17,6 +17,7 @@ import {
   WifiOff,
   Check,
   ShieldAlert,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -48,7 +49,7 @@ function parseError(message: string): SidebarError {
   if (message.startsWith("RATE_LIMIT")) {
     return {
       kind: "rate_limit",
-      detail: "The Gemini free tier limit was reached.",
+      detail: "The Mistral rate limit was reached.",
       retryAt: Date.now() + RATE_LIMIT_COOLDOWN * 1000,
     };
   }
@@ -62,7 +63,7 @@ function parseError(message: string): SidebarError {
   ) {
     return { kind: "access_denied", detail: message };
   }
-  if (message.toLowerCase().includes("not found") || message.toLowerCase().includes("gemini_model")) {
+  if (message.toLowerCase().includes("not found") || message.toLowerCase().includes("mistral_model")) {
     return { kind: "access_denied", detail: message };
   }
   return { kind: "generic", detail: message };
@@ -186,11 +187,11 @@ export function NoteAISidebar({
         <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-[#508eff]/0 via-[#508eff]/40 to-[#508eff]/0" />
 
         <div className="flex items-center gap-2.5">
-          <div className="relative flex size-6 items-center justify-center rounded-md bg-[#508eff]/10 ring-1 ring-[#508eff]/20">
-            <BrainCircuit className="size-3.5 text-[#508eff]" strokeWidth={1.75} />
+          <div className="relative flex size-6 items-center justify-center rounded-md bg-foreground/8 ring-1 ring-foreground/12">
+            <Sparkles className="size-3.5 text-foreground" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-[12.5px] font-semibold tracking-tight text-foreground/85">AI Insights</p>
+            <p className="text-[12.5px] font-semibold tracking-tight text-foreground/85">AI Summary</p>
           </div>
         </div>
 

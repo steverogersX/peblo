@@ -112,6 +112,11 @@ export async function createNote(userId: string, input: CreateNoteInput): Promis
 export async function updateNote(userId: string, id: string, input: UpdateNoteInput): Promise<SerializedNote> {
   const patch: Record<string, unknown> = { ...input, updatedAt: new Date() };
 
+  // Derive visibility from share state
+  if (input.shareLinkPermission !== undefined) {
+    patch.visibility = input.shareLinkPermission !== "none" ? "public" : "private";
+  }
+
   // Lazily generate a share token the first time sharing is enabled
   if (input.shareLinkPermission && input.shareLinkPermission !== "none") {
     const [existing] = await db

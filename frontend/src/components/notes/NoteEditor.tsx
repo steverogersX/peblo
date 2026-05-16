@@ -318,26 +318,16 @@ export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = f
               </div>
             </div>
 
-            {/* Visibility */}
-            <div className="group/prop flex min-h-[32px] items-center rounded-md transition-colors duration-100 hover:bg-accent/25">
+            {/* Visibility — read-only, derived from share state */}
+            <div className="flex min-h-[32px] items-center">
               <div className="flex w-[140px] shrink-0 items-center gap-2 px-2 py-[7px] text-[12.5px] font-medium text-muted-foreground/40 select-none">
-                {selectedNote.visibility === "public"
+                {selectedNote.shareLinkPermission !== "none"
                   ? <Globe className="size-3.5 shrink-0" strokeWidth={1.5} />
                   : <Lock className="size-3.5 shrink-0" strokeWidth={1.5} />}
                 Visibility
               </div>
-              <div className="flex-1 px-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateNote(selectedNote.id, {
-                      visibility: selectedNote.visibility === "private" ? "public" : "private",
-                    })
-                  }
-                  className="rounded px-1 py-[5px] text-[13px] capitalize text-foreground/55 transition-colors hover:bg-accent/50 hover:text-foreground/80"
-                >
-                  {selectedNote.visibility ?? "private"}
-                </button>
+              <div className="flex-1 px-2 py-[7px] text-[13px] text-muted-foreground/35 select-none capitalize">
+                {selectedNote.shareLinkPermission !== "none" ? "public" : "private"}
               </div>
             </div>
 

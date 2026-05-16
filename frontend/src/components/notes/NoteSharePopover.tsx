@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Globe, Lock, Link2, Check, Eye, Pencil,
   Ban, ChevronDown,
@@ -91,6 +91,10 @@ export function NoteSharePopover({
   const [open, setOpen] = useState(false);
   const [linkPermission, setLinkPermission] = useState<Permission>(shareLinkPermission);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setLinkPermission(shareLinkPermission);
+  }, [shareLinkPermission]);
 
   const noteUrl =
     shareToken

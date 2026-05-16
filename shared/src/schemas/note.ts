@@ -25,7 +25,6 @@ export const UpdateNoteSchema = z.object({
   content: z.string().optional(),
   tags: z.array(z.string()).optional(),
   category: z.string().nullable().optional(),
-  visibility: NoteVisibilitySchema.optional(),
   isArchived: z.boolean().optional(),
   shareLinkPermission: ShareLinkPermissionSchema.optional(),
 });
