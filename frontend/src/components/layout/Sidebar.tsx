@@ -290,7 +290,7 @@ export function Sidebar() {
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 <p className="font-medium">{displayName}</p>
-                <p className="opacity-60">Free plan · click to expand</p>
+                <p className="opacity-60">click to expand</p>
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -303,7 +303,6 @@ export function Sidebar() {
                 </Avatar>
                 <div className="min-w-0 flex-1 text-left">
                   <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
-                  <p className="text-[11px] text-muted-foreground/60">Free plan</p>
                 </div>
                 <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100" />
               </DropdownMenuTrigger>
