@@ -117,8 +117,6 @@ export function Sidebar() {
     });
   };
 
-  const settingsActive = pathname.startsWith("/settings");
-
   return (
     <TooltipProvider delay={400}>
       <aside
@@ -234,42 +232,6 @@ export function Sidebar() {
             collapsed && "flex flex-col items-center px-1.5"
           )}
         >
-          {/* Settings */}
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Link
-                    href="/settings"
-                    className={cn(
-                      "mb-1 flex size-8 items-center justify-center rounded-md transition-colors",
-                      settingsActive
-                        ? "bg-sidebar-accent text-foreground"
-                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                    )}
-                  />
-                }
-              >
-                <Settings2 className="size-[17px]" strokeWidth={1.5} />
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>Settings</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link
-              href="/settings"
-              className={cn(
-                "mb-1 flex items-center gap-2.5 rounded-md px-2 py-[5px]",
-                "text-[13px] transition-colors duration-100",
-                settingsActive
-                  ? "bg-sidebar-accent text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground/90"
-              )}
-            >
-              <Settings2 className="size-[17px] shrink-0" strokeWidth={1.5} />
-              Settings
-            </Link>
-          )}
-
           {/* User row */}
           {collapsed ? (
             <Tooltip>
@@ -312,6 +274,16 @@ export function Sidebar() {
                     <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
                     <p className="truncate text-[11px] text-muted-foreground">{email}</p>
                   </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/settings")}
+                    className="cursor-pointer gap-2 text-[13px]"
+                  >
+                    <Settings2 className="size-3.5" />
+                    Settings
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>

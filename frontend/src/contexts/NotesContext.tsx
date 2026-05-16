@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { Note, UpdateNote } from "@/lib/schemas/note";
 import { notesApi } from "@/lib/api/notes";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type SaveStatus = "saved" | "saving" | "unsaved";
 export type SortBy = "updatedAt" | "createdAt" | "title";
@@ -229,11 +230,18 @@ interface NotesContextValue extends NotesState {
 const NotesContext = createContext<NotesContextValue | null>(null);
 
 export function NotesProvider({ children }: { children: ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
   const [state, dispatch] = useReducer(notesReducer, initialState);
   const stateRef = useRef(state);
   stateRef.current = state;
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      dispatch({ type: "LOAD_SUCCESS", payload: { notes: [], nextCursor: null, hasMore: false } });
+      return;
+    }
+    dispatch({ type: "LOAD_START" });
     notesApi
       .list()
       .then((result) => dispatch({ type: "LOAD_SUCCESS", payload: result }))
@@ -241,7 +249,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
         console.error("Failed to load notes:", err);
         dispatch({ type: "LOAD_ERROR" });
       });
-  }, []);
+  }, [user?.id, authLoading]);
 
   const loadMore = useCallback(() => {
     const { cursor, hasMore, isFetchingMore } = stateRef.current;

@@ -7,6 +7,7 @@ import { db } from "../db";
 import { notes, users, type NoteRow } from "../db/schema";
 import type { CreateNoteInput, UpdateNoteInput } from "../lib/schemas";
 import { AppError } from "../lib/AppError";
+import { env } from "../config/env";
 
 export type SerializedNote = {
   id: string;
@@ -210,13 +211,8 @@ const noteSchema = z.object({
 });
 
 async function callAI(title: string, plainContent: string): Promise<z.infer<typeof noteSchema>> {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) {
-    throw new AppError("AI service is not configured. Set MISTRAL_API_KEY to enable summaries.", 503);
-  }
-
-  const mistral = createMistral({ apiKey });
-  const model = process.env.MISTRAL_MODEL ?? "mistral-small-latest";
+  const mistral = createMistral({ apiKey: env.MISTRAL_API_KEY });
+  const model = env.MISTRAL_MODEL;
   const snippet = plainContent.slice(0, 12000);
 
   try {

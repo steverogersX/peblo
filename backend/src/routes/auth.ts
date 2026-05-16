@@ -4,13 +4,14 @@ import { z } from "zod";
 import { validateBody } from "../middleware/validate";
 import { requireAuth } from "../middleware/auth";
 import * as authService from "../services/auth.service";
+import { env } from "../config/env";
 
 const router = Router();
 
 const COOKIE_OPTS = {
   httpOnly: true,
   sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
+  secure: env.NODE_ENV === "production",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
@@ -50,7 +51,7 @@ router.post("/login", validateBody(LoginSchema), async (req: Request, res: Respo
 });
 
 router.post("/logout", (_req: Request, res: Response) => {
-  res.clearCookie("token", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+  res.clearCookie("token", { httpOnly: true, sameSite: "lax", secure: env.NODE_ENV === "production" });
   res.status(httpStatus.OK).json({ success: true });
 });
 

@@ -1,11 +1,9 @@
-import "dotenv/config";
+import "./config/env"; // validates env at startup — must be first
 import { createServer } from "http";
+import { env } from "./config/env";
 import app from "./app";
 import { checkDbConnection } from "./db";
 import { attachPresence } from "./realtime/presence";
-
-const PORT = process.env.PORT ?? 3001;
-const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 
 async function start() {
   try {
@@ -17,10 +15,10 @@ async function start() {
   }
 
   const httpServer = createServer(app);
-  attachPresence(httpServer, CORS_ORIGIN);
+  attachPresence(httpServer, env.CORS_ORIGIN);
 
-  httpServer.listen(PORT, () => {
-    console.log(`Backend running on http://localhost:${PORT}`);
+  httpServer.listen(env.PORT, () => {
+    console.log(`Backend running on http://localhost:${env.PORT}`);
   });
 }
 

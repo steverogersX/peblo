@@ -5,8 +5,9 @@ import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { AppError } from "../lib/AppError";
 import httpStatus from "http-status";
+import { env } from "../config/env";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = env.JWT_SECRET;
 const JWT_EXPIRES_IN = "7d";
 
 export interface JwtPayload {

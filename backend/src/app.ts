@@ -2,6 +2,7 @@ import express, { type Request, type Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import httpStatus from "http-status";
+import { env } from "./config/env";
 import notesRouter from "./routes/notes";
 import authRouter from "./routes/auth";
 import publicNotesRouter from "./routes/publicNotes";
@@ -12,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
+    origin: env.CORS_ORIGIN,
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
   })
