@@ -1,6 +1,37 @@
 # Sample Outputs
 
-Representative API responses, AI-generated content, and database schema information for the Peblo Notes application.
+Representative API responses, AI-generated content, database schema, and application screenshots for the Peblo Notes application.
+
+---
+
+## Screenshots
+
+### Dashboard — Stats & Weekly Activity
+![Dashboard stats and weekly activity chart](<../assets/peblo-notes (1).png>)
+
+### Dashboard — Recent Notes, AI Usage & Top Tags
+![Dashboard lower section showing recently edited notes, AI usage stats, and most-used tags](<../assets/peblo-notes (2).png>)
+
+### Notes Workspace — Rich Text Editor
+![Notes list and rich text editor with tags and category](<../assets/peblo-notes (3).png>)
+
+### Notes Workspace — AI Sidebar (Summary & Action Items)
+![Notes editor with AI sidebar open showing generated summary and action items](<../assets/peblo-notes (4).png>)
+
+### Notes Workspace — Filter & Sort Popover
+![Notes editor with filter and sort popover open](<../assets/peblo-notes (5).png>)
+
+### Shared Notes Management
+![Shared by me page showing publicly shared notes with access controls](<../assets/peblo-notes (6).png>)
+
+### Settings — Account
+![Settings page showing account details and danger zone](<../assets/peblo-notes (7).png>)
+
+### Settings — User Menu
+![Settings page with sidebar user menu open](<../assets/peblo-notes (8).png>)
+
+### Notes Workspace — Share Popover
+![Notes editor with share link popover showing access level options](<../assets/peblo-notes (9).png>)
 
 ---
 

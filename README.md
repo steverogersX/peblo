@@ -11,6 +11,7 @@ A full-stack, AI-powered notes application. Create and manage notes with a rich-
 ## Table of Contents
 
 - [Demo](#demo)
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
@@ -23,6 +24,30 @@ A full-stack, AI-powered notes application. Create and manage notes with a rich-
 - [Project Structure](#project-structure)
 - [Sample Outputs](#sample-outputs)
 - [Optional Enhancements](#optional-enhancements)
+
+---
+
+## Screenshots
+
+| Dashboard | Notes Editor |
+|---|---|
+| ![](<assets/peblo-notes (1).png>) | ![](<assets/peblo-notes (3).png>) |
+| Stats, weekly activity chart | Rich text editor with tags & category |
+
+| AI Sidebar | Filter & Sort |
+|---|---|
+| ![](<assets/peblo-notes (4).png>) | ![](<assets/peblo-notes (5).png>) |
+| AI-generated summary, action items, suggested title | Tag/category filter and sort popover |
+
+| Public Sharing | Shared Notes |
+|---|---|
+| ![](<assets/peblo-notes (9).png>) | ![](<assets/peblo-notes (6).png>) |
+| Share popover with access level picker | Shared-by-me management page |
+
+| Dashboard (lower) | Settings |
+|---|---|
+| ![](<assets/peblo-notes (2).png>) | ![](<assets/peblo-notes (7).png>) |
+| Recent notes, AI usage stats, top tags | Account management and danger zone |
 
 ---
 
