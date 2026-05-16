@@ -3,6 +3,7 @@ import { z } from "zod";
 import httpStatus from "http-status";
 import { validateBody } from "../middleware/validate";
 import * as notesService from "../services/notes.service";
+import type { ApiResponse } from "../lib/AppError";
 
 const router = Router();
 
@@ -14,7 +15,8 @@ const PublicUpdateSchema = z.object({
 router.get("/:token", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await notesService.getPublicNoteByToken(req.params.token);
-    res.status(httpStatus.OK).json({ data });
+    const body: ApiResponse<typeof data> = { success: true, data };
+    res.status(httpStatus.OK).json(body);
   } catch (err) {
     next(err);
   }
@@ -26,7 +28,8 @@ router.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await notesService.updatePublicNote(req.params.token, req.body);
-      res.status(httpStatus.OK).json({ data });
+      const body: ApiResponse<typeof data> = { success: true, data };
+      res.status(httpStatus.OK).json(body);
     } catch (err) {
       next(err);
     }

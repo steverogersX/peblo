@@ -9,11 +9,11 @@ import { useTagColors } from "@/contexts/TagColorContext";
 
 function TagRowSkeleton() {
   return (
-    <div className="flex items-center gap-3 px-1 py-2">
-      <Skeleton className="h-3.5 w-3.5 rounded" />
-      <Skeleton className="h-5 w-16 rounded-full" />
-      <Skeleton className="h-1.5 flex-1 rounded-full" />
-      <Skeleton className="h-3.5 w-4" />
+    <div className="flex items-center gap-3 px-3 py-2.5">
+      <Skeleton className="size-2 shrink-0 rounded-full" />
+      <Skeleton className="h-3.5 w-20 rounded" />
+      <Skeleton className="h-1 flex-1 rounded-full" />
+      <Skeleton className="h-3.5 w-6 rounded" />
     </div>
   );
 }
@@ -47,9 +47,9 @@ export function TopTags() {
 
       <div className="h-px w-full bg-border/40" />
 
-      <div className="px-4 py-3">
+      <div className="px-2 py-2">
         {loading ? (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {Array.from({ length: 5 }).map((_, i) => <TagRowSkeleton key={i} />)}
           </div>
         ) : tags.length === 0 ? (
@@ -58,7 +58,7 @@ export function TopTags() {
           </div>
         ) : (
           <div className="space-y-0.5">
-            {tags.map((item, idx) => {
+            {tags.map((item) => {
               const pct = Math.round((item.count / maxCount) * 100);
               const style = getTagStyle(item.tag);
               return (
@@ -66,34 +66,35 @@ export function TopTags() {
                   key={item.tag}
                   type="button"
                   onClick={() => openTag(item.tag)}
-                  className="group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors hover:bg-accent/40"
+                  className="group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-accent/40"
                 >
-                  {/* Rank */}
-                  <span className="w-4 shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground/30">
-                    {idx + 1}
-                  </span>
-
-                  {/* Tag chip */}
+                  {/* Color dot */}
                   <span
-                    className="w-[76px] shrink-0 truncate rounded-full px-2.5 py-0.5 text-[11.5px] font-medium"
-                    style={style}
-                  >
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: style.color }}
+                  />
+
+                  {/* Tag name */}
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/70 transition-colors group-hover:text-foreground">
                     {item.tag}
                   </span>
 
-                  {/* Bar */}
-                  <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-accent/60">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
-                      style={{
-                        width: `${pct}%`,
-                        background: `linear-gradient(90deg, ${style.color}66, ${style.color})`,
-                      }}
-                    />
+                  {/* Bar track */}
+                  <div className="w-16 shrink-0">
+                    <div className="relative h-[3px] overflow-hidden rounded-full bg-accent/70">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: style.color,
+                          opacity: 0.7,
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Count */}
-                  <span className="w-5 shrink-0 text-right text-[12px] font-medium tabular-nums text-muted-foreground/50 transition-colors group-hover:text-foreground/70">
+                  <span className="w-6 shrink-0 text-right text-[12px] tabular-nums text-muted-foreground/40 transition-colors group-hover:text-muted-foreground/70">
                     {item.count}
                   </span>
                 </button>

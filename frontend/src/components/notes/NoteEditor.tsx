@@ -6,7 +6,7 @@ import {
   MoreHorizontal, Loader2, FileText,
   Maximize2, Minimize2, ArrowLeft,
   Tag, FolderOpen, ChevronRight,
-  CalendarDays,
+  CalendarDays, Sparkles,
 } from "lucide-react";
 import { RichEditor } from "@/components/notes/RichEditor";
 import { TagInput } from "@/components/notes/TagInput";
@@ -37,6 +37,8 @@ const CONTENT_MAX = "mx-auto w-full max-w-[900px]";
 interface NoteEditorProps {
   focusMode?: boolean;
   onToggleFocus?: () => void;
+  showAISidebar?: boolean;
+  onToggleAISidebar?: () => void;
 }
 
 function formatDate(iso: string) {
@@ -45,7 +47,7 @@ function formatDate(iso: string) {
   });
 }
 
-export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps) {
+export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = false, onToggleAISidebar }: NoteEditorProps) {
   const {
     selectedNote, updateNote, deleteNote, toggleArchive,
     setSaveStatus, saveStatus, selectNote,
@@ -58,7 +60,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
 
   useEffect(() => {
     if (selectedNote) setTitle(selectedNote.title);
-  }, [selectedNote?.id]); // eslint-disable-line
+  }, [selectedNote?.id, selectedNote?.title]); // eslint-disable-line
 
   useEffect(() => {
     if (selectedNote && !selectedNote.title && !selectedNote.content) {
@@ -162,6 +164,25 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
               </span>
             )}
           </span>
+
+          {/* AI sidebar toggle */}
+          {onToggleAISidebar && (
+            <Tooltip>
+              <TooltipTrigger
+                onClick={onToggleAISidebar}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                  "text-foreground hover:text-foreground/70 transition-colors duration-150",
+                  showAISidebar && "text-[#508eff] hover:text-[#508eff]/80"
+                )}
+              >
+                <Sparkles className="size-3.5" strokeWidth={1.5} />
+              </TooltipTrigger>
+              <TooltipContent className="text-[12px]">
+                {showAISidebar ? "Close AI insights" : "AI insights"}
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Focus toggle */}
           <Tooltip>

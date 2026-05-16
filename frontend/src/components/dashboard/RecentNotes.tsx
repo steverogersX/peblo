@@ -20,7 +20,7 @@ function timeAgo(iso: string): string {
 
 function NoteRowSkeleton() {
   return (
-    <div className="flex items-center gap-3.5 px-5 py-3.5">
+    <div className="flex items-center gap-3.5 border-b border-border/30 px-5 py-3.5 last:border-b-0">
       <Skeleton className="size-7 shrink-0 rounded-lg" />
       <Skeleton className="h-3.5 flex-1" />
       <Skeleton className="h-3 w-10 shrink-0" />
@@ -84,7 +84,7 @@ export function RecentNotes() {
               key={note.id}
               type="button"
               onClick={() => openNote(note.id)}
-              className="group flex w-full items-center gap-3.5 px-5 py-3.5 text-left transition-colors hover:bg-accent/40"
+              className="group flex w-full items-center gap-3.5 px-5 py-3.5 text-left transition-colors hover:bg-accent/40 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border/30"
             >
               {/* Icon */}
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-accent/60 transition-colors group-hover:bg-accent">

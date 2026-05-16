@@ -54,7 +54,7 @@ export const notesApi = {
     request<{ id: string }>(`/api/notes/${id}`, { method: "DELETE" }),
 
   summarize: (id: string) =>
-    request<Note>(`/api/notes/${id}/summarize`, { method: "POST" }),
+    request<{ note: Note; suggestedTitle: string }>(`/api/notes/${id}/summarize`, { method: "POST" }),
 
   getPublic: (token: string) =>
     request<PublicNote>(`/api/public/notes/${token}`),
