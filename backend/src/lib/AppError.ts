@@ -22,4 +22,8 @@ export class AppError extends Error {
   static notFound(resource: string): AppError {
     return new AppError(`${resource} not found`, 404);
   }
+
+  static forbidden(message = "Forbidden"): AppError {
+    return new AppError(message, 403);
+  }
 }
