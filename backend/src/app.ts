@@ -6,6 +6,7 @@ import { env } from "./config/env";
 import notesRouter from "./routes/notes";
 import authRouter from "./routes/auth";
 import publicNotesRouter from "./routes/publicNotes";
+import insightsRouter from "./routes/insights";
 import { ApiError } from "./lib/AppError";
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/notes", notesRouter);
 app.use("/api/public/notes", publicNotesRouter);
+app.use("/api/insights", insightsRouter);
 
 app.get("/health", (_req: Request, res: Response) => {
   res.status(httpStatus.OK).json({ ok: true });

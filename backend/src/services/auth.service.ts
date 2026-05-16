@@ -67,3 +67,8 @@ export async function getMe(userId: string) {
   if (!user) throw new AppError("User not found", httpStatus.NOT_FOUND);
   return user;
 }
+
+export async function deleteUser(userId: string): Promise<void> {
+  const [row] = await db.delete(users).where(eq(users.id, userId)).returning({ id: users.id });
+  if (!row) throw new AppError("User not found", httpStatus.NOT_FOUND);
+}

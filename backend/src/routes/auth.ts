@@ -64,4 +64,14 @@ router.get("/me", requireAuth, async (req: Request, res: Response, next: NextFun
   }
 });
 
+router.delete("/account", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await authService.deleteUser(req.user!.userId);
+    res.clearCookie("token", { httpOnly: true, sameSite: "lax", secure: env.NODE_ENV === "production" });
+    res.status(httpStatus.OK).json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
