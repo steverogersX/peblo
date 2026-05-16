@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Globe, Lock, Link2, Check, Eye, Pencil,
-  Ban, UserPlus, ChevronDown,
+  Ban, ChevronDown,
 } from "lucide-react";
 import {
   Popover,
@@ -16,20 +16,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
 import type { ShareLinkPermission } from "@peblo/shared";
 
 type Permission = ShareLinkPermission;
 
-interface SharedPerson {
-  email: string;
-  permission: "view" | "edit";
-}
-
 const PERM_META: Record<Permission, { label: string; Icon: React.ElementType; desc: string }> = {
-  none: { label: "No access",  Icon: Ban,    desc: "Only invited people can access" },
+  none: { label: "No access",  Icon: Ban,    desc: "Link sharing is disabled" },
   view: { label: "Can view",   Icon: Eye,    desc: "Anyone with the link can view"  },
   edit: { label: "Can edit",   Icon: Pencil, desc: "Anyone with the link can edit"  },
 };
@@ -48,15 +41,17 @@ function PermissionPicker({
   const { label, Icon } = PERM_META[value];
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <Icon className="size-3.5 shrink-0" strokeWidth={1.5} />
-          {label}
-          <ChevronDown className="size-3 opacity-50" strokeWidth={1.5} />
-        </button>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12.5px] text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+          />
+        }
+      >
+        <Icon className="size-3.5 shrink-0" strokeWidth={1.5} />
+        {label}
+        <ChevronDown className="size-3 opacity-50" strokeWidth={1.5} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align} sideOffset={4} className="w-[140px] p-1">
         {options.map((opt) => {
@@ -88,19 +83,13 @@ interface NoteSharePopoverProps {
 }
 
 export function NoteSharePopover({
-  noteId,
   noteTitle,
   shareLinkPermission,
   shareToken,
   onLinkPermissionChange,
 }: NoteSharePopoverProps) {
-  const { user } = useAuth();
-
   const [open, setOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [invitePermission, setInvitePermission] = useState<Permission>("view");
   const [linkPermission, setLinkPermission] = useState<Permission>(shareLinkPermission);
-  const [people, setPeople] = useState<SharedPerson[]>([]);
   const [copied, setCopied] = useState(false);
 
   const noteUrl =
@@ -122,61 +111,34 @@ export function NoteSharePopover({
     onLinkPermissionChange(perm);
   }
 
-  function handleInvite() {
-    const email = inviteEmail.trim().toLowerCase();
-    if (!email) return;
-    setPeople((prev) => [
-      ...prev.filter((p) => p.email !== email),
-      { email, permission: invitePermission === "none" ? "view" : invitePermission },
-    ]);
-    setInviteEmail("");
-  }
-
-  function updatePersonPermission(email: string, perm: Permission) {
-    if (perm === "none") {
-      setPeople((prev) => prev.filter((p) => p.email !== email));
-    } else {
-      setPeople((prev) =>
-        prev.map((p) => (p.email === email ? { ...p, permission: perm } : p))
-      );
-    }
-  }
-
-  const displayName = user?.name ?? "You";
-  const ownerInitials = displayName
-    .split(" ")
-    .map((w: string) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const isShared = linkPermission !== "none" || people.length > 0;
+  const isShared = linkPermission !== "none";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12.5px] font-medium transition-colors",
-            isShared
-              ? "text-blue/80 hover:text-blue hover:bg-blue/8"
-              : "text-muted-foreground/60 hover:text-foreground hover:bg-accent/50",
-            open && (isShared ? "bg-blue/10 text-blue" : "bg-accent/50 text-foreground")
-          )}
-        >
-          {isShared
-            ? <Globe className="size-3.5" strokeWidth={1.5} />
-            : <Lock className="size-3.5" strokeWidth={1.5} />}
-          Share
-        </button>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12.5px] font-medium transition-colors",
+              isShared
+                ? "text-blue/80 hover:text-blue hover:bg-blue/8"
+                : "text-muted-foreground/60 hover:text-foreground hover:bg-accent/50",
+              open && (isShared ? "bg-blue/10 text-blue" : "bg-accent/50 text-foreground")
+            )}
+          />
+        }
+      >
+        {isShared
+          ? <Globe className="size-3.5" strokeWidth={1.5} />
+          : <Lock className="size-3.5" strokeWidth={1.5} />}
+        Share
       </PopoverTrigger>
 
       <PopoverContent
         align="end"
         sideOffset={10}
-        className="w-[400px] p-0 shadow-xl border-border/70 overflow-hidden"
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="w-[380px] p-0 shadow-xl border-border/70 overflow-hidden"
       >
         {/* ── Header ── */}
         <div className="px-5 pt-5 pb-4">
@@ -188,88 +150,8 @@ export function NoteSharePopover({
           </p>
         </div>
 
-        {/* ── Invite input ── */}
-        <div className="px-5 pb-4">
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 transition-shadow focus-within:border-border-strong focus-within:shadow-[0_0_0_2px_var(--ring)/12%]">
-            <UserPlus className="size-3.5 shrink-0 text-muted-foreground/40" strokeWidth={1.5} />
-            <input
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-              placeholder="Invite by email address…"
-              className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground/35"
-            />
-            {inviteEmail.trim() && (
-              <div className="flex shrink-0 items-center gap-1.5">
-                <PermissionPicker
-                  value={invitePermission}
-                  onChange={setInvitePermission}
-                  options={["view", "edit"]}
-                  align="end"
-                />
-                <button
-                  type="button"
-                  onClick={handleInvite}
-                  className="rounded-md bg-foreground px-3 py-1 text-[12px] font-medium text-background transition-opacity hover:opacity-80"
-                >
-                  Invite
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── People with access ── */}
-        <div className="px-5 pb-4">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/40">
-            People with access
-          </p>
-
-          <div className="space-y-0.5">
-            {/* Owner */}
-            <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-              <Avatar size="sm" className="shrink-0">
-                <AvatarFallback className="bg-accent text-[10px] font-semibold text-muted-foreground">
-                  {ownerInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium text-foreground">{displayName}</p>
-                {user?.email && (
-                  <p className="truncate text-[11px] text-muted-foreground/45">{user.email}</p>
-                )}
-              </div>
-              <span className="shrink-0 rounded-md bg-accent px-2 py-0.5 text-[11px] font-medium text-muted-foreground/60">
-                Owner
-              </span>
-            </div>
-
-            {/* Invited people */}
-            {people.map((person) => (
-              <div
-                key={person.email}
-                className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/40"
-              >
-                <Avatar size="sm" className="shrink-0">
-                  <AvatarFallback className="bg-accent text-[10px] font-semibold text-muted-foreground">
-                    {person.email.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] text-foreground/80">{person.email}</p>
-                </div>
-                <PermissionPicker
-                  value={person.permission}
-                  onChange={(v) => updatePersonPermission(person.email, v)}
-                  options={["view", "edit", "none"]}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ── Link access ── */}
-        <div className="border-t border-border/60 bg-muted/30 px-5 py-4">
+        <div className="px-5 pb-5">
           <div className="flex items-center gap-3">
             <div
               className={cn(
