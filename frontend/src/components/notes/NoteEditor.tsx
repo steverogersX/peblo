@@ -8,6 +8,16 @@ import {
   Tag, FolderOpen, ChevronRight,
   CalendarDays, Sparkles,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { RichEditor } from "@/components/notes/RichEditor";
 import { TagInput } from "@/components/notes/TagInput";
 import { NoteSharePopover } from "@/components/notes/NoteSharePopover";
@@ -65,10 +75,12 @@ export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = f
   const { settings } = useSettings();
 
   const [title, setTitle] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (selectedNote) setTitle(selectedNote.title);
   }, [selectedNote?.id, selectedNote?.title]); // eslint-disable-line
 
@@ -232,7 +244,7 @@ export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = f
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => deleteNote(selectedNote.id)}
+                onClick={() => setShowDeleteDialog(true)}
                 variant="destructive"
                 className="gap-2 text-[13px]"
               >
@@ -369,6 +381,27 @@ export function NoteEditor({ focusMode = false, onToggleFocus, showAISidebar = f
           </span>
         </div>
       )}
+
+      {/* ── Delete confirmation ── */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{title || "Untitled"}&rdquo; will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteNote(selectedNote.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

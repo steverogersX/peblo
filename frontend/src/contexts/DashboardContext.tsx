@@ -6,6 +6,8 @@ import {
 } from "react";
 import type { ProductivityInsights, WeeklyActivity } from "@/lib/schemas/insights";
 import { useNotes } from "@/contexts/NotesContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { insightsApi } from "@/lib/api/insights";
 import type { Note } from "@/lib/schemas/note";
 
 
@@ -91,32 +93,48 @@ function computeInsights(notes: Note[]): ProductivityInsights {
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const { notes, loadStatus } = useNotes();
-  const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
+  const [apiInsights, setApiInsights] = useState<ProductivityInsights | null>(null);
+  const [apiStatus, setApiStatus] = useState<Status>("idle");
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
-  const status: Status =
-    loadStatus === "idle" || loadStatus === "loading" || refreshing
-      ? "loading"
-      : loadStatus === "error"
-      ? "error"
-      : "success";
+  const fetchInsights = useCallback(async () => {
+    if (!user) return;
+    setApiStatus("loading");
+    try {
+      const { insights } = await insightsApi.get();
+      setApiInsights(insights);
+      setApiStatus("success");
+      setLastRefreshed(new Date());
+    } catch {
+      // Fall back to client-computed insights if the API fails
+      setApiStatus("error");
+    }
+  }, [user]);
 
-  const insights = useMemo(
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (loadStatus === "success") fetchInsights();
+  }, [loadStatus, fetchInsights]);
+
+  // Use server insights when available, fall back to client-computed
+  const clientInsights = useMemo(
     () => (loadStatus === "success" ? computeInsights(notes) : null),
     [notes, loadStatus]
   );
 
-  useEffect(() => {
-    if (loadStatus === "success") setLastRefreshed(new Date());
-  }, [loadStatus]);
+  const insights = apiInsights ?? clientInsights;
+
+  const status: Status =
+    apiStatus === "idle" || apiStatus === "loading" || loadStatus === "loading"
+      ? "loading"
+      : apiStatus === "success" || loadStatus === "success"
+      ? "success"
+      : "error";
 
   const refresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      setLastRefreshed(new Date());
-    }, 400);
-  }, []);
+    fetchInsights();
+  }, [fetchInsights]);
 
   return (
     <DashboardContext.Provider value={{ insights, status, error: null, lastRefreshed, refresh }}>

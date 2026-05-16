@@ -1,11 +1,22 @@
 "use client";
 
-import { useRef, useState, useEffect, type KeyboardEvent } from "react";
+import { useRef, useState, useEffect, useCallback, type KeyboardEvent } from "react";
 import {
   Tag, SlidersHorizontal, PenLine, Palette,
   Plus, X, RotateCcw, User, Sun, Moon, ChevronDown, Check,
-  LogOut,
+  LogOut, Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useTagColors } from "@/contexts/TagColorContext";
 import { TAG_COLOR_NAMES, getTagStyleByIndex } from "@/lib/tag-colors";
@@ -585,7 +596,17 @@ function EditorSection() {
 }
 
 function AccountSection() {
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = useCallback(async () => {
+    setDeleting(true);
+    try {
+      await deleteAccount();
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteAccount]);
 
   const displayName = user?.name ?? "—";
   const email = user?.email ?? "—";
@@ -624,29 +645,34 @@ function AccountSection() {
       {/* Danger zone */}
       <RowGroup label="Danger Zone">
         <div className="px-5 py-4">
-          <p className="mb-1 text-[13.5px] font-medium text-foreground">Sign out</p>
-          <p className="mb-3 text-[12.5px] text-muted-foreground">
-            Sign out of your account on this device.
-          </p>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 rounded-lg border border-border/60 px-3.5 py-1.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:border-border hover:bg-accent hover:text-foreground"
-          >
-            <LogOut className="size-3.5" strokeWidth={1.5} />
-            Sign out
-          </button>
-        </div>
-
-        <Separator />
-
-        <div className="px-5 py-4">
           <p className="mb-1 text-[13.5px] font-medium text-destructive">Delete account</p>
           <p className="mb-3 text-[12.5px] text-muted-foreground">
             Permanently delete your account and all its data. This cannot be undone.
           </p>
-          <button className="rounded-lg border border-destructive/30 px-3.5 py-1.5 text-[12.5px] font-medium text-destructive transition-colors hover:bg-destructive/8">
-            Delete account
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger className="flex items-center gap-2 rounded-lg border border-destructive/30 px-3.5 py-1.5 text-[12.5px] font-medium text-destructive transition-colors hover:bg-destructive/8 disabled:opacity-50">
+              <Trash2 className="size-3.5" strokeWidth={1.5} />
+              Delete account
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete account permanently?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete your account and all your notes immediately. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {deleting ? "Deleting…" : "Delete my account"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </RowGroup>
     </>
