@@ -265,6 +265,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       tags: [],
       visibility: "private",
       isArchived: false,
+      shareLinkPermission: "none",
       createdAt: now,
       updatedAt: now,
     };

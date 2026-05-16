@@ -110,7 +110,9 @@ function SharedByMeRow({ note, onStopSharing }: { note: Note; onStopSharing: (id
   const [copied, setCopied] = useState(false);
 
   function copyLink() {
-    navigator.clipboard.writeText(`https://peblo.app/note/${note.id}`).catch(() => {});
+    if (!note.shareToken) return;
+    const url = `${window.location.origin}/view/${note.shareToken}`;
+    navigator.clipboard.writeText(url).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -136,7 +138,7 @@ function SharedByMeRow({ note, onStopSharing }: { note: Note; onStopSharing: (id
           className="gap-1.5 text-[12px] font-normal text-muted-foreground bg-transparent border border-border"
         >
           <Globe className="size-3 shrink-0" strokeWidth={1.5} />
-          Anyone with link
+          {note.shareLinkPermission === "edit" ? "Can edit" : "View only"}
         </Badge>
       </TableCell>
 
@@ -183,7 +185,7 @@ function SharedByMeRow({ note, onStopSharing }: { note: Note; onStopSharing: (id
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem
                 className="gap-2.5 text-[13px]"
-                onClick={() => router.push("/notes")}
+                onClick={() => router.push(`/notes/${note.id}`)}
               >
                 <ArrowUpRight className="size-3.5 text-muted-foreground" strokeWidth={1.5} />
                 Open note
@@ -338,10 +340,10 @@ function EmptySharedWithMe() {
 export default function SharedPage() {
   const { notes, updateNote, loadStatus } = useNotes();
   const loading = loadStatus === "idle" || loadStatus === "loading";
-  const publicNotes = notes.filter((n) => n.visibility === "public" && !n.isArchived);
+  const publicNotes = notes.filter((n) => n.shareLinkPermission !== "none" && !n.isArchived);
 
   function stopSharing(id: string) {
-    updateNote(id, { visibility: "private" });
+    updateNote(id, { shareLinkPermission: "none" });
   }
 
   return (

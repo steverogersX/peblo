@@ -19,8 +19,9 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import type { ShareLinkPermission } from "@peblo/shared";
 
-type Permission = "none" | "view" | "edit";
+type Permission = ShareLinkPermission;
 
 interface SharedPerson {
   email: string;
@@ -81,30 +82,44 @@ function PermissionPicker({
 interface NoteSharePopoverProps {
   noteId: string;
   noteTitle: string;
-  visibility: "private" | "public";
+  shareLinkPermission: ShareLinkPermission;
+  shareToken: string | null;
+  onLinkPermissionChange: (perm: ShareLinkPermission) => void;
 }
 
-export function NoteSharePopover({ noteId, noteTitle, visibility }: NoteSharePopoverProps) {
+export function NoteSharePopover({
+  noteId,
+  noteTitle,
+  shareLinkPermission,
+  shareToken,
+  onLinkPermissionChange,
+}: NoteSharePopoverProps) {
   const { user } = useAuth();
 
   const [open, setOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [invitePermission, setInvitePermission] = useState<Permission>("view");
-  const [linkPermission, setLinkPermission] = useState<Permission>(
-    visibility === "public" ? "view" : "none"
-  );
+  const [linkPermission, setLinkPermission] = useState<Permission>(shareLinkPermission);
   const [people, setPeople] = useState<SharedPerson[]>([]);
   const [copied, setCopied] = useState(false);
 
   const noteUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/notes/${noteId}`
-      : `/notes/${noteId}`;
+    shareToken
+      ? typeof window !== "undefined"
+        ? `${window.location.origin}/view/${shareToken}`
+        : `/view/${shareToken}`
+      : null;
 
   function handleCopyLink() {
+    if (!noteUrl) return;
     navigator.clipboard.writeText(noteUrl).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2200);
+  }
+
+  function handleLinkPermissionChange(perm: Permission) {
+    setLinkPermission(perm);
+    onLinkPermissionChange(perm);
   }
 
   function handleInvite() {
@@ -276,7 +291,7 @@ export function NoteSharePopover({ noteId, noteTitle, visibility }: NoteSharePop
 
             <PermissionPicker
               value={linkPermission}
-              onChange={setLinkPermission}
+              onChange={handleLinkPermissionChange}
               options={["none", "view", "edit"]}
             />
           </div>
@@ -286,13 +301,14 @@ export function NoteSharePopover({ noteId, noteTitle, visibility }: NoteSharePop
             <div className="mt-3 flex items-center gap-2.5 rounded-lg border border-border/50 bg-background px-3 py-2">
               <Link2 className="size-3.5 shrink-0 text-muted-foreground/30" strokeWidth={1.5} />
               <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground/40">
-                {noteUrl}
+                {noteUrl ?? "Generating link…"}
               </span>
               <button
                 type="button"
                 onClick={handleCopyLink}
+                disabled={!noteUrl}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-all",
+                  "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-all disabled:opacity-40",
                   copied
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                     : "bg-accent text-foreground/70 hover:bg-accent/80 hover:text-foreground"

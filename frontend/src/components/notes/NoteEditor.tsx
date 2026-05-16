@@ -143,7 +143,11 @@ export function NoteEditor({ focusMode = false, onToggleFocus }: NoteEditorProps
           <NoteSharePopover
             noteId={selectedNote.id}
             noteTitle={title}
-            visibility={selectedNote.visibility ?? "private"}
+            shareLinkPermission={selectedNote.shareLinkPermission ?? "none"}
+            shareToken={selectedNote.shareToken ?? null}
+            onLinkPermissionChange={(perm) =>
+              updateNote(selectedNote.id, { shareLinkPermission: perm })
+            }
           />
           {/* Save status — fades in only when saving */}
           <span className="mr-2 select-none text-[11px] text-muted-foreground/30 tabular-nums">
