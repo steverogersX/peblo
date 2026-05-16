@@ -209,18 +209,20 @@ export async function summarizeNote(userId: string, noteId: string): Promise<Sum
   return { note: serialize(updated), suggestedTitle };
 }
 
-const noteSchema = z.object({
+type NoteAnalysis = { summary: string; actionItems: string[]; suggestedTitle: string };
+const noteSchema: z.ZodType<NoteAnalysis> = z.object({
   summary: z.string().describe("A detailed summary of the note between 500 and 1000 characters. Cover the main points, context, and key details. Write 'The note is empty.' if there is no content."),
   actionItems: z.array(z.string()).max(5).describe("Up to 5 actionable tasks found in the note. Empty array if none."),
   suggestedTitle: z.string().describe("The current title if already clear and accurate, otherwise a concise improvement."),
 });
 
-async function callAI(title: string, plainContent: string): Promise<z.infer<typeof noteSchema>> {
+async function callAI(title: string, plainContent: string): Promise<NoteAnalysis> {
   const mistral = createMistral({ apiKey: env.MISTRAL_API_KEY });
   const model = env.MISTRAL_MODEL;
   const snippet = plainContent.slice(0, 12000);
 
   try {
+    // @ts-expect-error TS2589: ai SDK v6 generic depth exceeds TypeScript's limit
     const { object } = await generateObject({
       model: mistral(model),
       schema: noteSchema,

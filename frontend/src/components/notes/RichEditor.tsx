@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { buildExtensions } from "@/lib/editor-extensions";
 import {
@@ -193,7 +193,7 @@ function FloatingToolbar({ editor }: { editor: ReturnType<typeof useEditor> | nu
 // ── Main RichEditor ───────────────────────────────────────────────────────
 export function RichEditor({ content, onChange, placeholder, className, spellCheck = false, fontSize = "md" }: RichEditorProps) {
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useLayoutEffect(() => { onChangeRef.current = onChange; });
 
   const editor = useEditor({
     immediatelyRender: false,

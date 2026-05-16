@@ -50,21 +50,23 @@ function AccessPicker({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[12px] font-medium transition-colors",
-            "hover:bg-accent/60 focus-visible:outline-none",
-            value === "none"
-              ? "border-border text-muted-foreground bg-transparent"
-              : "border-border text-muted-foreground bg-transparent"
-          )}
-        >
-          <Icon className="size-3 shrink-0" strokeWidth={1.5} />
-          {label}
-          <ChevronDown className="size-2.5 opacity-40" strokeWidth={2} />
-        </button>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[12px] font-medium transition-colors",
+              "hover:bg-accent/60 focus-visible:outline-none",
+              value === "none"
+                ? "border-border text-muted-foreground bg-transparent"
+                : "border-border text-muted-foreground bg-transparent"
+            )}
+          />
+        }
+      >
+        <Icon className="size-3 shrink-0" strokeWidth={1.5} />
+        {label}
+        <ChevronDown className="size-2.5 opacity-40" strokeWidth={2} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" sideOffset={4} className="w-[148px] p-1">
         {(["view", "edit", "none"] as ShareLinkPermission[]).map((opt) => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Lock, Check, Clock, PenLine } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { notesApi, type PublicNote } from "@/lib/api/notes";
@@ -172,12 +173,12 @@ export default function SharedNotePage() {
             This link is no longer active or the note owner has restricted access.
           </p>
         </div>
-        <a
+        <Link
           href="/"
           className="rounded-lg bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-opacity hover:opacity-80"
         >
           Go home
-        </a>
+        </Link>
       </div>
     );
   }

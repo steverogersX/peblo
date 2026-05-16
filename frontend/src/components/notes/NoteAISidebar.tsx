@@ -131,6 +131,7 @@ export function NoteAISidebar({
   useEffect(() => () => clearTimer(), [clearTimer]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSummary(note.aiSummary ?? null);
     setActionItems(note.aiActionItems ?? []);
     setGeneratedAt(note.aiGeneratedAt ?? null);

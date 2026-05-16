@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   BarChart3,
   ScrollText,
@@ -90,7 +90,11 @@ export function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { createNote } = useNotes();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const stored = localStorage.getItem("sidebar-collapsed");
+    return stored !== null ? stored === "true" : false;
+  });
 
   function handleNewNote() {
     const id = createNote();
@@ -110,11 +114,6 @@ export function Sidebar() {
     await logout();
     router.push("/login");
   }
-
-  useEffect(() => {
-    const stored = localStorage.getItem("sidebar-collapsed");
-    if (stored !== null) setCollapsed(stored === "true");
-  }, []);
 
   const toggle = () => {
     setCollapsed((prev) => {

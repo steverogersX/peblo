@@ -6,6 +6,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   type ReactNode,
 } from "react";
@@ -233,7 +234,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [state, dispatch] = useReducer(notesReducer, initialState);
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useLayoutEffect(() => { stateRef.current = state; });
 
   useEffect(() => {
     if (authLoading) return;

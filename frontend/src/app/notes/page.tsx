@@ -28,10 +28,6 @@ export default function NotesPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [focusMode, showAISidebar]);
 
-  useEffect(() => {
-    if (!selectedNote) setShowAISidebar(false);
-  }, [selectedNote]);
-
   const startResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -72,7 +68,7 @@ export default function NotesPage() {
       <NoteEditor
         focusMode={focusMode}
         onToggleFocus={() => setFocusMode((v) => !v)}
-        showAISidebar={showAISidebar}
+        showAISidebar={aiSidebarOpen}
         onToggleAISidebar={() => setShowAISidebar((v) => !v)}
       />
 

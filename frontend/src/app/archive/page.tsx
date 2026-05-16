@@ -172,14 +172,16 @@ function ArchiveRow({
                   Open note
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem
-                    className="gap-2.5 text-[13px] text-destructive focus:text-destructive"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <Trash2 className="size-3.5" strokeWidth={1.5} />
-                    Delete permanently
-                  </DropdownMenuItem>
+                <AlertDialogTrigger
+                  render={
+                    <DropdownMenuItem
+                      className="gap-2.5 text-[13px] text-destructive focus:text-destructive"
+                      onSelect={(e) => e.preventDefault()}
+                    />
+                  }
+                >
+                  <Trash2 className="size-3.5" strokeWidth={1.5} />
+                  Delete permanently
                 </AlertDialogTrigger>
               </DropdownMenuContent>
             </DropdownMenu>

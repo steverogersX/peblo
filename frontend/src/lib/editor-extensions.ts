@@ -18,6 +18,7 @@ const MarkdownParagraph = Paragraph.extend({
   addStorage() {
     return {
       markdown: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         serialize(state: any, node: any) {
           if (node.childCount === 0) {
             state.write("<p></p>");
