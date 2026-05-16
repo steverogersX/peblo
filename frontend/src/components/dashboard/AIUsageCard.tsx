@@ -133,33 +133,24 @@ export function AIUsageCard() {
             {/* Weekly bar */}
             <UsageBar label="This week" value={thisWeek} limit={WEEKLY_LIMIT} color={VIOLET} />
 
-            {/* Remaining + upgrade */}
+            {/* Remaining */}
             <div
               className={cn(
-                "flex items-center justify-between rounded-lg px-3.5 py-3",
+                "flex items-center gap-2 rounded-lg px-3.5 py-3",
                 remaining <= 10 ? "bg-amber-500/8" : "bg-accent/40"
               )}
             >
-              <div className="flex items-center gap-2">
-                <Zap
-                  className="size-3.5 shrink-0"
-                  style={{ color: remaining <= 10 ? "#f59e0b" : BLUE }}
-                  strokeWidth={1.5}
-                />
-                <p className={cn(
-                  "text-[12px]",
-                  remaining <= 10 ? "text-amber-400/80" : "text-muted-foreground/55"
-                )}>
-                  {remaining} requests left this month
-                </p>
-              </div>
-              <button
-                type="button"
-                className="rounded px-2 py-0.5 text-[11.5px] font-semibold transition-colors"
-                style={{ color: BLUE }}
-              >
-                Upgrade
-              </button>
+              <Zap
+                className="size-3.5 shrink-0"
+                style={{ color: remaining <= 10 ? "#f59e0b" : BLUE }}
+                strokeWidth={1.5}
+              />
+              <p className={cn(
+                "text-[12px]",
+                remaining <= 10 ? "text-amber-400/80" : "text-muted-foreground/55"
+              )}>
+                {remaining} requests left this month
+              </p>
             </div>
           </div>
         )}

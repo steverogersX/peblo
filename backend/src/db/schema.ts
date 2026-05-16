@@ -26,6 +26,8 @@ export const notes = pgTable("notes", {
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
   category: text("category"),
   visibility: text("visibility").notNull().default("private"),
+  shareLinkPermission: text("share_link_permission").notNull().default("none"),
+  shareToken: text("share_token").unique(),
   isArchived: boolean("is_archived").notNull().default(false),
   aiSummary: text("ai_summary"),
   aiActionItems: jsonb("ai_action_items").$type<string[]>(),

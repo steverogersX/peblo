@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, type KeyboardEvent } from "react";
 import {
   Tag, SlidersHorizontal, PenLine, Palette,
   Plus, X, RotateCcw, User, Sun, Moon, ChevronDown, Check,
-  LogOut, Sparkles, Shield, Zap,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTagColors } from "@/contexts/TagColorContext";
@@ -23,7 +23,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 type Section = "appearance" | "tags-categories" | "defaults" | "editor" | "account";
 
@@ -598,7 +597,7 @@ function AccountSection() {
 
   return (
     <>
-      <SectionHeading title="Account" description="Your profile and plan details." />
+      <SectionHeading title="Account" description="Your profile details." />
 
       {/* Profile card */}
       <div className="mb-6 overflow-hidden rounded-xl border border-border/60 bg-card/50">
@@ -619,48 +618,8 @@ function AccountSection() {
             )}
           </div>
 
-          <Badge className="shrink-0 rounded-full bg-accent px-3 py-1 text-[11.5px] font-medium text-muted-foreground border-0">
-            Free plan
-          </Badge>
         </div>
       </div>
-
-      {/* Upgrade */}
-      <RowGroup label="Plan">
-        <div className="px-5 py-5">
-          <div className="mb-4 flex items-start gap-3">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue/10">
-              <Zap className="size-4 text-blue" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-[13.5px] font-semibold text-foreground">Upgrade to Pro</p>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                Unlock AI summaries, unlimited notes, and shared workspaces with a Pro plan.
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-4 grid grid-cols-3 gap-2">
-            {[
-              { icon: Sparkles, label: "AI Summaries" },
-              { icon: Shield,   label: "Shared Spaces" },
-              { icon: Zap,      label: "Unlimited Notes" },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-1.5 rounded-lg border border-border/50 bg-accent/30 py-3 text-center"
-              >
-                <Icon className="size-4 text-muted-foreground" strokeWidth={1.5} />
-                <span className="text-[11.5px] font-medium text-muted-foreground">{label}</span>
-              </div>
-            ))}
-          </div>
-
-          <button className="rounded-lg bg-blue px-4 py-2 text-[13px] font-medium text-white transition-opacity hover:opacity-90">
-            Upgrade to Pro
-          </button>
-        </div>
-      </RowGroup>
 
       {/* Danger zone */}
       <RowGroup label="Danger Zone">
@@ -740,23 +699,6 @@ export default function SettingsPage() {
             );
           })}
         </nav>
-
-        {/* Bottom user strip */}
-        {user && (
-          <div className="border-t border-sidebar-border/60 px-3.5 py-3">
-            <div className="flex items-center gap-2.5">
-              <Avatar size="sm" className="ring-1 ring-border">
-                <AvatarFallback className="bg-blue/10 text-[11px] font-semibold text-blue">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <p className="truncate text-[12.5px] font-medium text-foreground">{user.name}</p>
-                <p className="truncate text-[11.5px] text-muted-foreground/70">{user.email}</p>
-              </div>
-            </div>
-          </div>
-        )}
       </aside>
 
       {/* ── Content ───────────────────────────────────────────────────── */}

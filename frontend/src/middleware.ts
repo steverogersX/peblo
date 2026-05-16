@@ -1,21 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/signup"];
+// Always accessible, no auth required
+const ALWAYS_PUBLIC = ["/view"];
+// Redirect to dashboard if already logged in
+const AUTH_PATHS = ["/login", "/signup"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const hasToken = req.cookies.has("token");
 
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  if (ALWAYS_PUBLIC.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
-  if (!hasToken && !isPublic) {
+  const isAuthPage = AUTH_PATHS.some((p) => pathname.startsWith(p));
+
+  if (!hasToken && !isAuthPage) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (hasToken && isPublic) {
+  if (hasToken && isAuthPage) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

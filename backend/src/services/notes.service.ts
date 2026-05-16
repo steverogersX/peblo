@@ -1,6 +1,7 @@
-import { and, eq, or, lt, desc } from "drizzle-orm";
+import { randomUUID } from "crypto";
+import { and, eq, or, lt, desc, isNotNull } from "drizzle-orm";
 import { db } from "../db";
-import { notes, type NoteRow } from "../db/schema";
+import { notes, users, type NoteRow } from "../db/schema";
 import type { CreateNoteInput, UpdateNoteInput } from "../lib/schemas";
 import { AppError } from "../lib/AppError";
 
@@ -12,12 +13,16 @@ export type SerializedNote = {
   category?: string;
   visibility: string;
   isArchived: boolean;
+  shareLinkPermission: string;
+  shareToken: string | null;
   aiSummary?: string;
   aiActionItems?: string[];
   aiGeneratedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
+
+export type PublicNote = Omit<SerializedNote, "shareToken"> & { ownerName: string };
 
 export type PaginatedNotes = {
   notes: SerializedNote[];
@@ -52,6 +57,8 @@ function serialize(row: NoteRow): SerializedNote {
     category: row.category ?? undefined,
     visibility: row.visibility,
     isArchived: row.isArchived,
+    shareLinkPermission: row.shareLinkPermission,
+    shareToken: row.shareToken ?? null,
     aiSummary: row.aiSummary ?? undefined,
     aiActionItems: row.aiActionItems ?? undefined,
     aiGeneratedAt: row.aiGeneratedAt?.toISOString() ?? undefined,
@@ -59,6 +66,7 @@ function serialize(row: NoteRow): SerializedNote {
     updatedAt: row.updatedAt.toISOString(),
   };
 }
+
 
 export async function getAllNotes(
   userId: string,
@@ -98,13 +106,60 @@ export async function createNote(userId: string, input: CreateNoteInput): Promis
 }
 
 export async function updateNote(userId: string, id: string, input: UpdateNoteInput): Promise<SerializedNote> {
+  const patch: Record<string, unknown> = { ...input, updatedAt: new Date() };
+
+  // Lazily generate a share token the first time sharing is enabled
+  if (input.shareLinkPermission && input.shareLinkPermission !== "none") {
+    const [existing] = await db
+      .select({ shareToken: notes.shareToken })
+      .from(notes)
+      .where(and(eq(notes.id, id), eq(notes.userId, userId)));
+    if (existing && !existing.shareToken) {
+      patch.shareToken = randomUUID();
+    }
+  }
+
   const [row] = await db
     .update(notes)
-    .set({ ...input, updatedAt: new Date() })
+    .set(patch)
     .where(and(eq(notes.id, id), eq(notes.userId, userId)))
     .returning();
   if (!row) throw AppError.notFound("Note");
   return serialize(row);
+}
+
+async function fetchPublicRow(token: string) {
+  const [result] = await db
+    .select({ note: notes, ownerName: users.name })
+    .from(notes)
+    .innerJoin(users, eq(notes.userId, users.id))
+    .where(and(eq(notes.shareToken, token), isNotNull(notes.shareToken)));
+  return result ?? null;
+}
+
+export async function getPublicNoteByToken(token: string): Promise<PublicNote> {
+  const result = await fetchPublicRow(token);
+  if (!result || result.note.shareLinkPermission === "none") throw AppError.notFound("Note");
+  const { shareToken: _token, ...rest } = serialize(result.note);
+  return { ...rest, ownerName: result.ownerName };
+}
+
+export async function updatePublicNote(
+  token: string,
+  input: { title?: string; content?: string }
+): Promise<PublicNote> {
+  const result = await fetchPublicRow(token);
+  if (!result) throw AppError.notFound("Note");
+  if (result.note.shareLinkPermission !== "edit") {
+    throw AppError.forbidden("Note is not editable via share link");
+  }
+  const [updated] = await db
+    .update(notes)
+    .set({ ...input, updatedAt: new Date() })
+    .where(eq(notes.id, result.note.id))
+    .returning();
+  const { shareToken: _token, ...rest } = serialize(updated);
+  return { ...rest, ownerName: result.ownerName };
 }
 
 export async function deleteNote(userId: string, id: string): Promise<string> {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const NoteVisibilitySchema = z.enum(["private", "public"]);
+export const ShareLinkPermissionSchema = z.enum(["none", "view", "edit"]);
 
 export const NoteSchema = z.object({
   id: z.string(),
@@ -10,6 +11,8 @@ export const NoteSchema = z.object({
   category: z.string().nullable().optional(),
   visibility: NoteVisibilitySchema,
   isArchived: z.boolean(),
+  shareLinkPermission: ShareLinkPermissionSchema.default("none"),
+  shareToken: z.string().nullable().optional(),
   aiSummary: z.string().optional(),
   aiActionItems: z.array(z.string()).optional(),
   aiGeneratedAt: z.string().optional(),
@@ -24,8 +27,10 @@ export const UpdateNoteSchema = z.object({
   category: z.string().nullable().optional(),
   visibility: NoteVisibilitySchema.optional(),
   isArchived: z.boolean().optional(),
+  shareLinkPermission: ShareLinkPermissionSchema.optional(),
 });
 
 export type Note = z.infer<typeof NoteSchema>;
 export type NoteVisibility = z.infer<typeof NoteVisibilitySchema>;
 export type UpdateNote = z.infer<typeof UpdateNoteSchema>;
+export type ShareLinkPermission = z.infer<typeof ShareLinkPermissionSchema>;

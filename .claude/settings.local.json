@@ -38,7 +38,12 @@
       "Bash(grep -i \"empty\\\\|blank\\\\|\\\\\\\\\\\\\\\\n\")",
       "Bash(pnpm add *)",
       "Bash(xargs ls -la)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Select-String -Pattern \"\\\\.tsx?$\")",
+      "Bash(Select-Object -First 30)",
+      "Bash(npx drizzle-kit *)",
+      "PowerShell(Stop-Process *)",
+      "Bash(yes \"\")"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import type { Note } from "@/lib/schemas/note";
+import type { ShareLinkPermission } from "@peblo/shared";
 import { request } from "./client";
 
 type CreatePayload = {
@@ -17,7 +18,10 @@ type UpdatePayload = {
   category?: string | null;
   visibility?: "private" | "public";
   isArchived?: boolean;
+  shareLinkPermission?: ShareLinkPermission;
 };
+
+export type PublicNote = Omit<Note, "shareToken"> & { ownerName: string };
 
 export type NotePageResult = {
   notes: Note[];
@@ -51,4 +55,13 @@ export const notesApi = {
 
   summarize: (id: string) =>
     request<Note>(`/api/notes/${id}/summarize`, { method: "POST" }),
+
+  getPublic: (token: string) =>
+    request<PublicNote>(`/api/public/notes/${token}`),
+
+  updatePublic: (token: string, body: { title?: string; content?: string }) =>
+    request<PublicNote>(`/api/public/notes/${token}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
 };
