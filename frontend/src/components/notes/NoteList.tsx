@@ -100,7 +100,7 @@ export function NoteList() {
               side="right"
               align="start"
               sideOffset={8}
-              className="w-52 p-0 gap-0 border-border bg-popover shadow-lg"
+              className="w-52 overflow-hidden p-0 gap-0 border-border bg-popover shadow-lg"
             >
               <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
@@ -154,26 +154,28 @@ export function NoteList() {
                       <Layers className="size-3" strokeWidth={1.5} />
                       Category
                     </div>
-                    <div className="space-y-0.5">
-                      {allCategories.map((cat) => {
-                        const active = filterCategories.includes(cat);
-                        return (
-                          <button
-                            key={cat}
-                            onClick={() => toggleFilterCategory(cat)}
-                            className={cn(
-                              "flex w-full items-center justify-between rounded-md px-2 py-1 text-[12px] transition-colors",
-                              active
-                                ? "bg-blue/10 text-blue font-medium"
-                                : "text-foreground hover:bg-accent"
-                            )}
-                          >
-                            <span className="truncate">{cat}</span>
-                            {active && <Check className="size-3 shrink-0" strokeWidth={2.5} />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <ScrollArea className="max-h-[120px] w-full overflow-x-hidden [&_[data-slot='scroll-area-scrollbar']]:hidden">
+                      <div className="space-y-0.5">
+                        {allCategories.map((cat) => {
+                          const active = filterCategories.includes(cat);
+                          return (
+                            <button
+                              key={cat}
+                              onClick={() => toggleFilterCategory(cat)}
+                              className={cn(
+                                "flex w-full min-w-0 items-center justify-between gap-1.5 rounded-md px-2 py-1 text-[12px] transition-colors",
+                                active
+                                  ? "bg-blue/10 text-blue font-medium"
+                                  : "text-foreground hover:bg-accent"
+                              )}
+                            >
+                              <span className="truncate">{cat}</span>
+                              {active && <Check className="size-3 shrink-0" strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
                   </div>
                 </>
               )}
@@ -187,8 +189,8 @@ export function NoteList() {
                       <Tag className="size-3" strokeWidth={1.5} />
                       Tags
                     </div>
-                    <ScrollArea className="max-h-[160px]">
-                      <div className="space-y-0.5 pr-1">
+                    <ScrollArea className="max-h-[160px] w-full overflow-x-hidden [&_[data-slot='scroll-area-scrollbar']]:hidden">
+                      <div className="space-y-0.5">
                         {allTags.map((tag) => {
                           const active = filterTags.includes(tag);
                           return (
@@ -196,7 +198,7 @@ export function NoteList() {
                               key={tag}
                               onClick={() => toggleFilterTag(tag)}
                               className={cn(
-                                "flex w-full items-center justify-between rounded-md px-2 py-1 text-[12px] transition-colors",
+                                "flex w-full min-w-0 items-center justify-between gap-1.5 rounded-md px-2 py-1 text-[12px] transition-colors",
                                 active
                                   ? "bg-blue/10 text-blue font-medium"
                                   : "text-foreground hover:bg-accent"
