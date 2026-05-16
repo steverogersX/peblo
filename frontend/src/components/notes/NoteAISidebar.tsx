@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   BrainCircuit,
   X,
@@ -307,9 +309,32 @@ export function NoteAISidebar({
               {/* Summary */}
               <Section icon={AlignLeft} label="Summary">
                 <div className="rounded-lg bg-muted/20 border border-border/25 px-3.5 py-3">
-                  <p className="text-[12.5px] leading-[1.72] text-foreground/75 tracking-[0.01em]">
-                    {summary}
-                  </p>
+                  <div className={cn(
+                    "text-[12.5px] leading-[1.72] text-foreground/75 tracking-[0.01em]",
+                    "[&_h1]:text-[13px] [&_h1]:font-semibold [&_h1]:text-foreground/85 [&_h1]:mb-1.5 [&_h1]:mt-3 [&_h1:first-child]:mt-0",
+                    "[&_h2]:text-[12.5px] [&_h2]:font-semibold [&_h2]:text-foreground/80 [&_h2]:mb-1 [&_h2]:mt-3 [&_h2:first-child]:mt-0",
+                    "[&_h3]:text-[12px] [&_h3]:font-medium [&_h3]:text-foreground/75 [&_h3]:mb-1 [&_h3]:mt-2.5 [&_h3:first-child]:mt-0",
+                    "[&_p]:mb-2 [&_p:last-child]:mb-0",
+                    "[&_ul]:mb-2 [&_ul]:ml-3 [&_ul]:space-y-0.5 [&_ul:last-child]:mb-0",
+                    "[&_ol]:mb-2 [&_ol]:ml-3 [&_ol]:space-y-0.5 [&_ol:last-child]:mb-0",
+                    "[&_li]:leading-[1.6]",
+                    "[&_ul>li]:list-disc [&_ol>li]:list-decimal",
+                    "[&_strong]:font-semibold [&_strong]:text-foreground/85",
+                    "[&_em]:italic [&_em]:text-foreground/70",
+                    "[&_code]:text-[11.5px] [&_code]:font-mono [&_code]:bg-muted/40 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded",
+                    "[&_pre]:bg-muted/30 [&_pre]:rounded-md [&_pre]:p-2.5 [&_pre]:mb-2 [&_pre]:overflow-x-auto",
+                    "[&_pre_code]:bg-transparent [&_pre_code]:p-0",
+                    "[&_blockquote]:border-l-2 [&_blockquote]:border-border/40 [&_blockquote]:pl-3 [&_blockquote]:text-foreground/55 [&_blockquote]:mb-2",
+                    "[&_a]:text-[#508eff] [&_a]:underline [&_a]:underline-offset-2",
+                    "[&_hr]:border-border/25 [&_hr]:my-2",
+                    "[&_table]:w-full [&_table]:text-[11.5px] [&_table]:mb-2",
+                    "[&_th]:text-left [&_th]:font-semibold [&_th]:text-foreground/70 [&_th]:pb-1 [&_th]:border-b [&_th]:border-border/30",
+                    "[&_td]:py-1 [&_td]:border-b [&_td]:border-border/15",
+                  )}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {summary ?? ""}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </Section>
 
